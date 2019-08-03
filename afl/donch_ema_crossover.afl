@@ -1,0 +1,43 @@
+_SECTION_BEGIN("Donchian EMA Crossover with ADX filter Trading System");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+
+//Initial Parameters
+SetOption("FuturesMode" ,True);
+SetPositionSize(1, spsShares);
+
+//Parameters
+donch_length = Param("DonchianLength", 15);  //optimize("MALength1", 9, 1, 100, 1);
+donch_ema_per= Param("DonchianEMALength", 9); //optimize("MALength2", 14, 1, 100, 1);
+
+// Define indicators
+donch_upper  = HHV(Ref(H,-1), donch_length);
+donch_lower  = LLV(Ref(L,-1), donch_length);
+donch_middle = (donch_upper + donch_lower)/2;
+donch_ema    = EMA(donch_middle, donch_ema_per);
+
+//Buy-Sell Logic
+Buy   = Cross(donch_middle, donch_ema);
+Sell  = Cross(donch_ema, donch_middle);
+
+Short = Cross(donch_ema, donch_middle);
+Cover = Cross(donch_middle, donch_ema);
+
+Plot(Close, "Price", colorWhite, styleCandle);
+Plot(donch_middle, "donch_middle", colorWhite);
+Plot(donch_ema, "donch_ema",colorBlue);
+
+/* Plot Buy and Sell Signal Arrows */
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-40);
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorLime, 0,L, Offset=-50);
+PlotShapes(IIf(Buy, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-45);
+PlotShapes(IIf(Cover, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-40);
+PlotShapes(IIf(Cover, shapeSquare, shapeNone),colorLime, 0,L, Offset=-50);
+PlotShapes(IIf(Cover, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-45);
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorRed, 0, H, Offset=40);
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorOrange, 0,H, Offset=50);
+PlotShapes(IIf(Sell, shapeDownArrow, shapeNone),colorWhite, 0,H, Offset=-45);
+PlotShapes(IIf(Short, shapeSquare, shapeNone),colorRed, 0, H, Offset=40);
+PlotShapes(IIf(Short, shapeSquare, shapeNone),colorOrange, 0,H, Offset=50);
+PlotShapes(IIf(Short, shapeDownArrow, shapeNone),colorWhite, 0,H, Offset=-45);
+
+_SECTION_END();
