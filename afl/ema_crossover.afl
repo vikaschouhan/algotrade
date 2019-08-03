@@ -1,0 +1,41 @@
+_SECTION_BEGIN("EMA Crossover Trading System");
+
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C ));
+
+//Initial Parameters
+
+SetOption("FuturesMode" ,True);
+SetPositionSize(1, spsShares);
+
+//Parameters
+MALength1 = Param("MALength1", 1);  //optimize("MALength1", 9, 1, 100, 1);
+MALength2 = Param("MALength2", 56); //optimize("MALength2", 14, 1, 100, 1);
+
+//Buy-Sell Logic
+Buy  = Cross(ema(C, MALength1), ema(C, MALength2));
+Sell = Cross(ema(C, MALength2), ema(C, MALength1)) ;
+
+//Buy  = ExRem( Buy, Sell );
+//Sell = ExRem( Sell, Buy );
+Short = Sell;
+Cover = Buy;
+
+
+Plot(Close, "Price", colorWhite, styleCandle);
+Plot(ema(C, MALength1), "FastEMA",colorWhite);
+Plot(ema(C, MALength2), "SlowEMA",colorBlue);
+
+/* Plot Buy and Sell Signal Arrows */
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-40);
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorLime, 0,L, Offset=-50);
+PlotShapes(IIf(Buy, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-45);
+PlotShapes(IIf(Cover, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-40);
+PlotShapes(IIf(Cover, shapeSquare, shapeNone),colorLime, 0,L, Offset=-50);
+PlotShapes(IIf(Cover, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-45);
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorRed, 0, H, Offset=40);
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorOrange, 0,H, Offset=50);
+PlotShapes(IIf(Sell, shapeDownArrow, shapeNone),colorWhite, 0,H, Offset=-45);
+PlotShapes(IIf(Short, shapeSquare, shapeNone),colorRed, 0, H, Offset=40);
+PlotShapes(IIf(Short, shapeSquare, shapeNone),colorOrange, 0,H, Offset=50);
+PlotShapes(IIf(Short, shapeDownArrow, shapeNone),colorWhite, 0,H, Offset=-45);

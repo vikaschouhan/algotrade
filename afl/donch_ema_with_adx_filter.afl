@@ -1,0 +1,85 @@
+_SECTION_BEGIN("Donchian EMA Crossover with ADX filter Trading System");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+
+//Initial Parameters
+SetOption("FuturesMode" ,True);
+SetPositionSize(1, spsShares);
+
+//Parameters
+donch_length = Param("DonchianLength", 15);  //optimize("MALength1", 9, 1, 100, 1);
+donch_ema_per= Param("DonchianEMALength", 9); //optimize("MALength2", 14, 1, 100, 1);
+ADX_limit    = Param("ADXLimit", 20);
+ADX_tfs      = ParamList("ADXTimeFrame", "1h|1D|1W");
+
+ADX_period   = Param("ADXPeriod", 14);
+ADX_tf       = -50;
+
+if (ADX_tfs == "1h")
+{
+    ADX_tf   = inHourly;
+}
+else if(ADX_tfs == "1D")
+{
+    ADX_tf   = inDaily;
+}
+else if (ADX_tfs == "1W")
+{
+    ADX_tf   = inWeekly;
+}
+else
+{
+    ADX_tf   = -50;
+}
+
+function ADX_TF_FUN(ADX_period_, ADX_tf_)
+{
+    TimeFrameSet(ADX_tf_);
+    _adx_ind = ADX(ADX_period_);
+    TimeFrameRestore();
+    return TimeFrameExpand(_adx_ind, ADX_tf_);
+}
+
+ADX_ind = Null;
+if (ADX_tf != -50)
+{ 
+    ADX_ind = ADX_TF_FUN(ADX_period, ADX_tf);
+}
+else
+{
+    ADX_ind = ADX(ADX_period);
+}
+
+// Define indicators
+donch_upper  = HHV(Ref(H,-1), donch_length);
+donch_lower  = LLV(Ref(L,-1), donch_length);
+donch_middle = (donch_upper + donch_lower)/2;
+donch_ema    = EMA(donch_middle, donch_ema_per);
+
+//Buy-Sell Logic
+Buy   = (ADX_ind > ADX_limit) AND Cross(donch_middle, donch_ema);
+Sell  = Cross(donch_ema, donch_middle);
+
+Short = (ADX_ind > ADX_limit) AND Cross(donch_ema, donch_middle);
+Cover = Cross(donch_middle, donch_ema);
+
+Plot(Close, "Price", colorWhite, styleCandle);
+Plot(donch_middle, "donch_middle", colorWhite);
+Plot(donch_ema, "donch_ema",colorBlue);
+Plot(ADX_ind, "ADX", color=colorBlue, ParamStyle("Style", styleOwnScale));
+//Plot(ADX_ind, "ADX", colorRed);
+
+/* Plot Buy and Sell Signal Arrows */
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-40);
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorLime, 0,L, Offset=-50);
+PlotShapes(IIf(Buy, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-45);
+PlotShapes(IIf(Cover, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-40);
+PlotShapes(IIf(Cover, shapeSquare, shapeNone),colorLime, 0,L, Offset=-50);
+PlotShapes(IIf(Cover, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-45);
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorRed, 0, H, Offset=40);
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorOrange, 0,H, Offset=50);
+PlotShapes(IIf(Sell, shapeDownArrow, shapeNone),colorWhite, 0,H, Offset=-45);
+PlotShapes(IIf(Short, shapeSquare, shapeNone),colorRed, 0, H, Offset=40);
+PlotShapes(IIf(Short, shapeSquare, shapeNone),colorOrange, 0,H, Offset=50);
+PlotShapes(IIf(Short, shapeDownArrow, shapeNone),colorWhite, 0,H, Offset=-45);
+
+_SECTION_END();
