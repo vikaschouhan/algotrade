@@ -78,14 +78,18 @@ function SuperTrend(atr_period, factor)
     VarSet("supertrend_trend", Trend);
 }
 
-// Initial parameters
-SetOption("FuturesMode" ,True);
-SetPositionSize(1, spsShares);
 
 // Parameters
 ATR_period = optimize("ATRPeriod", Param("ATRPeriod", 7, 1, 30, 1) , 1, 30, 1);
 factor     = optimize("Fator", Param("Factor", 3, 1, 25, 1), 1, 25, 1);
 slippage   = Param("Slippage", 1, 0, 10, 0.1);
+fut_mode   = ParamToggle("Futures Mode", "No|Yes", 1);
+
+if (fut_mode){
+    // Initial parameters
+    SetOption("FuturesMode" ,True);
+    SetPositionSize(1, spsShares);
+}
 
 // Call Supertrend
 SuperTrend(ATR_period, factor);
@@ -112,3 +116,5 @@ CoverPrice += slippage;
 Plot(TrendUp, "Trend", colorGreen);
 Plot(TrendDown, "Down", colorRed);
 Plot(Close, "Price", colorWhite, styleCandle);
+
+_SECTION_END();
