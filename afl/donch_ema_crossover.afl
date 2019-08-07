@@ -1,13 +1,24 @@
-_SECTION_BEGIN("Donchian EMA Crossover with ADX filter Trading System");
+_SECTION_BEGIN("Donchian EMA Crossover");
 SetChartOptions(0,chartShowArrows|chartShowDates);
 
-//Initial Parameters
-SetOption("FuturesMode" ,True);
-SetPositionSize(1, spsShares);
+SetOption("PriceBoundChecking", False);
 
 //Parameters
-donch_length = Param("DonchianLength", 15);  //optimize("MALength1", 9, 1, 100, 1);
-donch_ema_per= Param("DonchianEMALength", 9); //optimize("MALength2", 14, 1, 100, 1);
+donch_length  = optimize("DonchianLength", Param("DonchianLength", 15, 1, 100), 1, 100, 1);
+donch_ema_per = optimize("DonchianEMALength", Param("DonchianEMALength", 9, 1, 50), 1, 50, 1);
+slippage      = Param("Slippage", 0.15, 0, 10, 0.1);
+fut_mode      = ParamToggle("Futures Mode", "No|Yes", 1);
+
+if (fut_mode){
+    // Initial parameters
+    SetOption("FuturesMode" ,True);
+    SetPositionSize(1, spsShares);
+}
+
+BuyPrice += slippage;
+SellPrice -= slippage;
+ShortPrice -= slippage;
+CoverPrice += slippage;
 
 // Define indicators
 donch_upper  = HHV(Ref(H,-1), donch_length);
