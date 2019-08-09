@@ -1,0 +1,54 @@
+_SECTION_BEGIN("Donchian Breakout");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+
+SetOption("PriceBoundChecking", False);
+
+//Parameters
+donch_length  = optimize("DonchianLength", Param("DonchianLength", 15, 1, 100), 1, 100, 1);
+donch_ema_per = optimize("DonchianSmoothLength", Param("DonchianSmoothLength", 1, 10, 1), 1, 10, 1);
+slippage      = Param("Slippage", 0.15, 0, 10, 0.1);
+fut_mode      = ParamToggle("Futures Mode", "No|Yes", 1);
+
+if (fut_mode){
+    // Initial parameters
+    SetOption("FuturesMode" ,True);
+    SetPositionSize(1, spsShares);
+}
+
+BuyPrice += slippage;
+SellPrice -= slippage;
+ShortPrice -= slippage;
+CoverPrice += slippage;
+
+// Define indicators
+donch_upper  = HHV(EMA(Ref(H,-1), donch_ema_per), donch_length);
+donch_lower  = LLV(EMA(Ref(L,-1), donch_ema_per), donch_length);
+
+//Buy-Sell Logic
+Buy   = Close > Ref(donch_upper, -1);
+Sell  = Close < Ref(donch_lower, -1);
+Buy   = ExRem(Buy, Sell);
+Sell  = ExRem(Sell, Buy);
+
+Short = Sell;
+Cover = Buy;
+
+Plot(Close, "Price", colorWhite, styleCandle);
+Plot(donch_upper, "donch_upper", colorGreen);
+Plot(donch_lower, "donch_lower",colorRed);
+
+/* Plot Buy and Sell Signal Arrows */
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-40);
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorLime, 0,L, Offset=-50);
+PlotShapes(IIf(Buy, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-45);
+PlotShapes(IIf(Cover, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-40);
+PlotShapes(IIf(Cover, shapeSquare, shapeNone),colorLime, 0,L, Offset=-50);
+PlotShapes(IIf(Cover, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-45);
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorRed, 0, H, Offset=40);
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorOrange, 0,H, Offset=50);
+PlotShapes(IIf(Sell, shapeDownArrow, shapeNone),colorWhite, 0,H, Offset=-45);
+PlotShapes(IIf(Short, shapeSquare, shapeNone),colorRed, 0, H, Offset=40);
+PlotShapes(IIf(Short, shapeSquare, shapeNone),colorOrange, 0,H, Offset=50);
+PlotShapes(IIf(Short, shapeDownArrow, shapeNone),colorWhite, 0,H, Offset=-45);
+
+_SECTION_END();
