@@ -80,9 +80,9 @@ function SuperTrend(atr_period, factor)
 
 
 // Parameters
-ATR_period = optimize("ATRPeriod", Param("ATRPeriod", 7, 1, 30, 1) , 1, 30, 1);
-factor     = optimize("Fator", Param("Factor", 3, 1, 25, 1), 1, 25, 1);
-slippage   = Param("Slippage", 1, 0, 10, 0.1);
+ATR_period = optimize("ATRPeriod", Param("ATRPeriod", 7, 1, 40, 1) , 1, 40, 1);
+factor     = optimize("Fator", Param("Factor", 3, 1, 30, 1), 1, 30, 1);
+slippage   = Param("Slippage Percentage", 0.2, 0, 3, 0.01)/100;
 fut_mode   = ParamToggle("Futures Mode", "No|Yes", 1);
 
 if (fut_mode){
@@ -100,18 +100,18 @@ TrendDown = VarGet("supertrend_down");
 Trend     = VarGet("supertrend_trend");
 
 // Buy Sell rules
-Buy     = trend==1;
-Sell    = trend==-1;
+Buy     = Trend==1;
+Sell    = Trend==-1;
 Buy     = ExRem(Buy,Sell);
 Sell    = ExRem(Sell,Buy);
 Short   = Sell;
 Cover   = Buy;
 
 // slippages
-BuyPrice += slippage;
-SellPrice -= slippage;
-ShortPrice -= slippage;
-CoverPrice += slippage;
+BuyPrice   *= (1+slippage);
+SellPrice  *= (1-slippage);
+ShortPrice *= (1-slippage);
+CoverPrice *= (1+slippage);
 
 Plot(TrendUp, "Trend", colorGreen);
 Plot(TrendDown, "Down", colorRed);
