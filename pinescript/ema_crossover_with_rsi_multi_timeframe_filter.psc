@@ -11,9 +11,9 @@ ema_short = ema(close, es_len)
 ema_long  = ema(close, el_len)
 
 buy    = ((rsi_sig > rsi_sig[1]) and (rsi_sig > 50) and crossover(ema_short, ema_long)) or ((ema_short > ema_long) and crossover(rsi_sig, 50))
-sell   = crossunder(ema_short, ema_long) //or crossunder(rsi_sig, 50)
+sell   = crossunder(rsi_sig, 50)
 short  = ((rsi_sig < rsi_sig[1]) and (rsi_sig < 50) and crossunder(ema_short, ema_long)) or ((ema_short < ema_long) and crossunder(rsi_sig, 50))
-cover  = crossover(rsi_sig, 50) //or crossover(ema_short, ema_long)
+cover  = crossover(rsi_sig, 50)
 
 strategy.entry("L", strategy.long, when=buy)
 strategy.close("L", when=sell)
