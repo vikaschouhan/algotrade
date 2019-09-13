@@ -1,0 +1,103 @@
+_SECTION_BEGIN("Ren3H Crossover Strategy");
+
+function Heikinashi()
+{
+    HaClose = (O + H + L + C)/4; 
+    HaOpen  = AMA(Ref(HaClose, -1), 0.5); 
+    HaHigh  = Max(H, Max(HaClose, HaOpen)); 
+    HaLow   = Min(L, Min(HaClose, HaOpen));
+    
+    VarSet("heikinashi_close", HaClose);
+    VarSet("heikinashi_open", HaOpen);
+    VarSet("heikinashi_high", HaHigh);
+    VarSet("heikinashi_low", HaLow);
+}
+
+function Ren3(atr_period, atr_mul, src)
+{
+    ren3_sig[0] = src[0];
+    atr_this     = ATR(atr_period) * atr_mul;
+    
+    for(i=1; i<BarCount; i++)
+    {
+        if (src[i] > (ren3_sig[i-1] + atr_this[i]))
+        {
+            ren3_sig[i] = ren3_sig[i-1] + atr_this[i];
+        }
+        else
+        {
+            if (src[i] < (ren3_sig[i-1] - atr_this[i]))
+            {
+                ren3_sig[i] = ren3_sig[i-1] - atr_this[i];
+            }
+            else
+            {
+                ren3_sig[i] = ren3_sig[i-1];
+            }
+        }
+    }
+
+    VarSet("ren3_signal", ren3_sig);
+}
+
+// Parameters
+ATR_period = optimize("ATRPeriod", Param("ATRPeriod", 7, 1, 40, 1) , 1, 40, 1);
+factor     = optimize("ATRMultiplier", Param("ATRMultiplier", 3, 1, 15, 1), 1, 15, 1);
+EMA_len    = Param("EMALength", 9, 1, 25, 1);
+slippage   = Param("Slippage Percentage", 0.2, 0, 3, 0.01)/100;
+fut_mode   = ParamToggle("Futures Mode", "No|Yes", 1);
+perc_eq    = Param("Percentage of Equity", 20, 0, 100, 1);
+
+if (fut_mode){
+    // Initial parameters
+    SetOption("FuturesMode" ,True);
+    SetPositionSize(1, spsShares);
+}else{
+    SetPositionSize(perc_eq, spsPercentOfEquity); 
+}
+
+// Call Heikinashi
+Heikinashi();
+heikinashi_open   = VarGet("heikinashi_open");
+heikinashi_close  = VarGet("heikinashi_close");
+
+// Call Ren3
+Ren3(ATR_period, factor, heikinashi_close);
+ren3_signal = VarGet("ren3_signal");
+
+// Get ren3_ema
+ren3_ema    = EMA(ren3_signal, EMA_len);
+
+// Buy Sell rules
+Buy     = Cross(ren3_signal, ren3_ema);
+Sell    = Cross(ren3_ema, ren3_signal);
+Buy     = ExRem(Buy, Sell);
+Sell    = ExRem(Sell, Buy);
+Short   = Sell;
+Cover   = Buy;
+
+// slippages
+BuyPrice   *= (1+slippage);
+SellPrice  *= (1-slippage);
+ShortPrice *= (1-slippage);
+CoverPrice *= (1+slippage);
+
+Plot(ren3_signal, "Ren3Sig", colorGreen);
+Plot(ren3_ema, "Ren3EMA", colorRed);
+Plot(Close, "Price", colorWhite, styleCandle);
+
+// Plot Buy and Sell Signal Arrows
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-40);
+PlotShapes(IIf(Buy, shapeSquare, shapeNone),colorLime, 0,L, Offset=-50);
+PlotShapes(IIf(Buy, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-45);
+PlotShapes(IIf(Cover, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-40);
+PlotShapes(IIf(Cover, shapeSquare, shapeNone),colorLime, 0,L, Offset=-50);
+PlotShapes(IIf(Cover, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-45);
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorRed, 0, H, Offset=40);
+PlotShapes(IIf(Sell, shapeSquare, shapeNone),colorOrange, 0,H, Offset=50);
+PlotShapes(IIf(Sell, shapeDownArrow, shapeNone),colorWhite, 0,H, Offset=-45);
+PlotShapes(IIf(Short, shapeSquare, shapeNone),colorRed, 0, H, Offset=40);
+PlotShapes(IIf(Short, shapeSquare, shapeNone),colorOrange, 0,H, Offset=50);
+PlotShapes(IIf(Short, shapeDownArrow, shapeNone),colorWhite, 0,H, Offset=-45);
+
+_SECTION_END();
