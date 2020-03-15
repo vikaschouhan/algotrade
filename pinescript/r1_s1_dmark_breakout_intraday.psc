@@ -9,7 +9,7 @@ trade_sess     = "0915-1500"
 t_session      = time(timeframe.period, intraday_sess)
 t_sess_trade   = time(timeframe.period, trade_sess)
 sess_over      = not na(t_session[1]) and na(t_session)
-sess_valid     = not na(t_session[0])
+sess_valid     = not na(t_sess_trade[0])
 
 
 pivot_dmark(time_frame) =>
