@@ -32,6 +32,8 @@ sell = close < s_level - tolerance
 
 strategy.entry("L", strategy.long, when=buy and sess_valid)
 strategy.entry("S", strategy.short, when=sell and sess_valid)
+//strategy.close("L", when=crossunder(close, r_level) and sess_valid)
+//strategy.close("S", when=crossover(close, s_level) and sess_valid)
 strategy.close_all(when=sess_over)
 
 plot(r_level, style=plot.style_circles, linewidth=2, color=color.green, title="R1")
