@@ -4,6 +4,7 @@ strategy(title="ORB-A intraday scalping", shorttitle="ORB-A intrday scalping", o
 tolerance = input(defval=0, title="Tolerance")
 time_frame_m = input(defval='1D', title="Resolution", options=['1m', '5m', '10m', '15m', '30m', '45m', '1h', '2h', '4h', '1D', '2D', '4D', '1W', '2W', '1M', '2M', '6M'])
 stop_loss = input(1.0,   title="Stop loss", type=input.float)
+use_sperc = input(false, title='Stop loss & tolerance are in %centage(s)', type=input.bool)
 use_iday  = input(false, title='Use intraday', type=input.bool)
 end_hr    = input(15,    title='End session hour', type=input.integer)
 end_min   = input(14,    title='End session minutes', type=input.integer)
@@ -54,12 +55,14 @@ high_rangeL = security(syminfo.tickerid, time_frame, high_range)
 low_rangeL  = security(syminfo.tickerid, time_frame, low_range)
 //range       = (high_rangeL - low_rangeL)/low_rangeL
 
-stop_l = (close - stop_loss)
-stop_s = (close + stop_loss)
+stop_l = use_sperc ? close*(1-stop_loss/100.0) : (close - stop_loss)
+stop_s = use_sperc ? close*(1+stop_loss/100.0) :  (close + stop_loss)
+tolbu  = use_sperc ? high_rangeL*(1+tolerance/100.0) : (high_rangeL + tolerance)
+tolbl  = use_sperc ? low_rangeL*(1-tolerance/100.0) : (low_rangeL-tolerance)
 
-buy    = use_iday ? (crossover(close, high_rangeL+tolerance) and (hour < end_hr)) : crossover(close, high_rangeL+tolerance)
+buy    = use_iday ? (crossover(close, tolbu) and (hour < end_hr)) : crossover(close, tolbu)
 sell   = use_iday ? (crossunder(close, stop_l[1]) or chk_close_time(end_hr, end_min)) : crossunder(close, stop_l[1])
-short  = use_iday ? (crossunder(close, low_rangeL-tolerance) and (hour < end_hr)) : crossunder(close, low_rangeL-tolerance)
+short  = use_iday ? (crossunder(close, tolbl) and (hour < end_hr)) : crossunder(close, tolbl)
 cover  = use_iday ? (crossover(close, stop_s[1]) or chk_close_time(end_hr, end_min)) : crossover(close, stop_s[1])
 
 strategy.entry("L", strategy.long, when=buy)
