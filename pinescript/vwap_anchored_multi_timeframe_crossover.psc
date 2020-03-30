@@ -8,7 +8,7 @@ use_sperc    = input(false,      type=input.bool, title='Tolerance and stop loss
 use_iday     = input(false,      type=input.bool, title='Use intraday')
 end_hr       = input(15,         type=input.integer, title='End session hour')
 end_min      = input(14,         type=input.integer, title='End session minutes')
-
+use_tstop    = input(true,       title='Use trailing stop', type=input.bool)
 
 start_time   = security(syminfo.tickerid, time_frame, time)
 new_session  = iff(change(start_time), 1, 0)
@@ -42,8 +42,15 @@ vwap_sig = vwap_sum_fn()/vol_sum_fn()
 
 vwap_sl = use_sperc ? vwap_sig*(1+tolerance/100.0) : (vwap_sig+tolerance)
 vwap_ss = use_sperc ? vwap_sig*(1-tolerance/100.0) : (vwap_sig-tolerance)
-stop_l  = use_sperc ? vwap_sig*(1-stop_loss/100.0) : (vwap_sig-stop_loss)
-stop_s  = use_sperc ? vwap_sig*(1+stop_loss/100.0) : (vwap_sig+stop_loss)
+
+stop_l = use_sperc ? strategy.position_avg_price*(1-stop_loss/100.0) : (strategy.position_avg_price-stop_loss)
+stop_s = use_sperc ? strategy.position_avg_price*(1+stop_loss/100.0) : (strategy.position_avg_price+stop_loss)
+if use_tstop
+    stop_lt = use_sperc ? close*(1-stop_loss/100.0) : (close - stop_loss)
+    stop_st = use_sperc ? close*(1+stop_loss/100.0) :  (close + stop_loss)
+    stop_l  := stop_lt //max(stop_l, stop_lt)
+    stop_s  := stop_st //min(stop_s, stop_st)
+//
 
 buy    = use_iday ? (crossover(close, vwap_sl) and (hour < end_hr)) : crossover(close, vwap_sl)
 sell   = use_iday ? (crossunder(close, stop_l[1]) or chk_close_time(end_hr, end_min)) : crossunder(close, stop_l[1])
