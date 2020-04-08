@@ -1,5 +1,5 @@
 //@version=4
-strategy("Momentum Indicator", overlay=false)
+study("Momentum Indicator", overlay=false)
 
 mom_lback_period      = input(defval=24,     type=input.integer, title='Loopback period')
 mom_tframe            = input(defval='1D',   type=input.resolution, title='Time frame')
