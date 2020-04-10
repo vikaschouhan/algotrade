@@ -22,8 +22,10 @@ if ma_type == 'sma'
     hi_line   := hi_line_sma
     lo_line   := lo_line_sma
 //
+mid_line = avg(hi_line, lo_line)
 
 ////////////////////////////////
 /// Plot
 plot(hi_line,       color=color.green, title='Ch HI')
 plot(lo_line,       color=color.red,   title='Ch LO')
+plot(mid_line,      color=color.olive, title='Ch MID')
