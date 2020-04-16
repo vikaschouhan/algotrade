@@ -177,7 +177,7 @@ val_value = session_high - tpo_section_range * (val_position + 1)
 plot(series=vah_value, title='VAH', color=navy)
 plot(series=val_value, title='VAL', color=navy)
 //plot(series=current_sum, title='SUM', color=red)
-//plot(series=valuewhen(session_bar_counter == 0, vah_value[1], 0), title='VAH', color=navy, trackprice=true, offset=1, show_last=1)
+/plot(series=valuewhen(session_bar_counter == 0, vah_value[1], 0), title='VAH', color=navy, trackprice=true, offset=1, show_last=1)
 //plot(series=valuewhen(session_bar_counter == 0, val_value[1], 0), title='VAL', color=navy, trackprice=true, offset=1, show_last=1)
 
 f_gapper(_return_value)=>
