@@ -4,7 +4,7 @@ strategy("R1-S1 breakout", overlay=true)
 time_frame     = input("D", type=input.resolution)
 tolerance      = input(5,   type=input.integer)
 
-cpr(time_frame) =>
+pivot_cpr(time_frame) =>
     prev_close     = security(syminfo.tickerid, time_frame, close[1], lookahead=true)
     prev_open      = security(syminfo.tickerid, time_frame, open[1], lookahead=true)
     prev_high      = security(syminfo.tickerid, time_frame, high[1], lookahead=true)
@@ -21,7 +21,7 @@ cpr(time_frame) =>
     [pi_level, tc_level, bc_level, r1_level, s1_level, r2_level, s2_level]
 //
 
-[pi_level, tc_level, bc_level, r1_level, s1_level, r2_level, s2_level] = cpr(time_frame)
+[pi_level, tc_level, bc_level, r1_level, s1_level, r2_level, s2_level] = pivot_cpr(time_frame)
 
 buy  = close > r1_level + tolerance
 sell = close < s1_level - tolerance
