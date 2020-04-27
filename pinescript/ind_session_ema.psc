@@ -9,8 +9,7 @@ time_frame   = input(defval="D",      type=input.resolution, title="Time frame")
 
 ///////////////////////////////////////////
 /// Session specific EMA (with same algo as VWAP, but without volume)
-start_time   = security(syminfo.tickerid, time_frame, time)
-new_session  = iff(change(start_time), 1, 0)
+new_session  = iff(change(time(time_frame)), 1, 0)
 
 _vap_sum_fn(src) =>
     vwap_sum = 0.0
