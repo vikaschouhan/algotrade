@@ -1,5 +1,5 @@
 //@version=4
-strategy(title="ORB-A swingSwing w with vol filter", overlay=true)
+strategy(title="ORB-A SwingTrader with volatility filter", overlay=true)
 
 // ORB params
 orb_tolerance       = input(defval=0.0,     title="ORB Tolerance", type=input.float)
@@ -18,6 +18,9 @@ bb_mult             = input(defval=2.0,     title='BB Volatility ATR Multiplier'
 bb_tf               = input(defval='1D',    title='BB Volatility Timeframe', type=input.resolution)
 bb_vol_el           = input(defval=9,       title='BB Volatiltiy EMA Loopback period Length', type=input.integer)
 use_vol_filter      = input(defval=true,    title='USE Volatility filter', type=input.bool)
+
+// Other params
+pos_lag             = input(defval=0,       title='Position Lag', type=input.integer)
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -86,10 +89,10 @@ orb_tolbl       = orb_tolerance_perc ? orb_low_rangeL*(1-orb_tolerance/100.0) : 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Trading signals calculation
 
-buy_stdalone    = crossover(close, orb_tolbu)
-sell_stdalone   = use_stop_loss ? crossunder(close, stop_trail_loss[1]) : crossunder(close, orb_tolbl)
-short_stdalone  = crossunder(close, orb_tolbl)
-cover_stdalone  = use_stop_loss ? crossover(close, stop_trail_loss[1]) : crossover(close, orb_tolbu)
+buy_stdalone    = crossover(close, orb_tolbu)[pos_lag]
+sell_stdalone   = use_stop_loss ? crossunder(close, stop_trail_loss[1])[pos_lag] : crossunder(close, orb_tolbl)[pos_lag]
+short_stdalone  = crossunder(close, orb_tolbl)[pos_lag]
+cover_stdalone  = use_stop_loss ? crossover(close, stop_trail_loss[1])[pos_lag] : crossover(close, orb_tolbu)[pos_lag]
 
 buy    = use_vol_filter ? buy_stdalone and (ind_vol_t >= ind_vol_ema_t) : buy_stdalone
 sell   = sell_stdalone
