@@ -1,5 +1,5 @@
 //@version=4
-study("BB Vol MTR", overlay=true)
+study("BB Vol MTR", overlay=false)
 
 bb_source = input(defval=close,    type=input.source,     title='Source')
 bb_length = input(defval=20,       type=input.integer,    title='Length', minval=1)
