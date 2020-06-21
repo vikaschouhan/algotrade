@@ -4,6 +4,7 @@ strategy(title="ORB-A SwingTrader with volatility filter", overlay=true)
 // ORB params
 orb_tolerance       = input(defval=0.0,     title="ORB Tolerance", type=input.float)
 orb_time_frame_m    = input(defval='1D',    title="ORB Resolution", options=['1m', '5m', '10m', '15m', '30m', '45m', '1h', '2h', '4h', '1D', '2D', '4D', '1W', '2W', '1M', '2M', '6M'])
+orb_time_frame_m2   = input(defval='1D',    title='ORB Consequetive Gap Resolution', options=['1m', '5m', '10m', '15m', '30m', '45m', '1h', '2h', '4h', '1D', '2D', '4D', '1W', '2W', '1M', '2M', '6M'])
 orb_tolerance_perc  = input(defval=true,    title='Is ORB tolerance in percentage ?', type=input.bool)
 
 // Stop loss params
@@ -71,14 +72,15 @@ get_time_frame(tf) =>
   : (tf == '6M')  ? "6M"
   : "wrong resolution"
 //
-orb_time_frame = get_time_frame(orb_time_frame_m)
+orb_time_frame  = get_time_frame(orb_time_frame_m)
+orb_time_frame2 = get_time_frame(orb_time_frame_m2)
 
 is_newbar(res) =>
     change(time(res)) != 0
 //
 
-orb_high_range  = valuewhen(is_newbar('D'), high, 0)
-orb_low_range   = valuewhen(is_newbar('D'), low,  0)
+orb_high_range  = valuewhen(is_newbar(orb_time_frame2), high, 0)
+orb_low_range   = valuewhen(is_newbar(orb_time_frame2), low,  0)
 orb_high_rangeL = security(syminfo.tickerid, orb_time_frame, orb_high_range)
 orb_low_rangeL  = security(syminfo.tickerid, orb_time_frame, orb_low_range)
 
