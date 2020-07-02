@@ -27,7 +27,7 @@ pos_lag             = input(defval=0,       title='Position Lag', type=input.int
 ////////////////////////////////////////////////////////////////////////
 // Volatility calculation
 vol_bb_basis   = sma(bb_source[1], bb_length)  // Avoid repainting ??
-vol_bb_dev     = bb_mult * stdev(bb_source, bb_length)
+vol_bb_dev     = bb_mult * stdev(bb_source[1], bb_length)
 vol_bb_upper   = vol_bb_basis + vol_bb_dev
 vol_bb_lower   = vol_bb_basis - vol_bb_dev
 
