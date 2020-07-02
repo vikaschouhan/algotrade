@@ -14,7 +14,6 @@ use_stop_loss       = input(defval=true,    title='USE Stop Loss', type=input.bo
 // vol filter params
 bb_source           = input(defval=close,   title='BB Volatility Source', type=input.source)
 bb_length           = input(defval=20,      title='BB Volatility Loopback Period Length', type=input.integer, minval=1)
-bb_offset           = input(defval=0,       title='BB Offset (to account for future data leak).', type=input.integer)
 bb_mult             = input(defval=2.0,     title='BB Volatility ATR Multiplier', type=input.float, minval=0.01, maxval=50, step=0.01)
 bb_tf               = input(defval='1D',    title='BB Volatility Timeframe', type=input.resolution)
 bb_vol_el           = input(defval=9,       title='BB Volatiltiy EMA Loopback period Length', type=input.integer)
@@ -23,19 +22,21 @@ use_vol_filter      = input(defval=true,    title='USE Volatility filter', type=
 // Other params
 pos_lag             = input(defval=0,       title='Position Lag', type=input.integer)
 
+///////////////////////////////////////////////////////////////////////
+// Non repainting security function wrapper
+f_secureSecurity(_symbol, _res, _src) => security(_symbol, _res, _src[1], lookahead=barmerge.lookahead_on)
+
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 // Volatility calculation
-vol_bb_basis   = sma(bb_source[bb_offset], bb_length)  // Avoid repainting ??
-vol_bb_dev     = bb_mult * stdev(bb_source[bb_offset], bb_length)
+vol_bb_basis   = sma(bb_source, bb_length)
+vol_bb_dev     = bb_mult * stdev(bb_source, bb_length)
 vol_bb_upper   = vol_bb_basis + vol_bb_dev
 vol_bb_lower   = vol_bb_basis - vol_bb_dev
+ind_vol        = vol_bb_upper - vol_bb_lower
 
-vol_bb_basis_t = security(syminfo.tickerid, bb_tf, vol_bb_basis)
-vol_bb_upper_t = security(syminfo.tickerid, bb_tf, vol_bb_upper)
-vol_bb_lower_t = security(syminfo.tickerid, bb_tf, vol_bb_lower)
-ind_vol_t      = vol_bb_upper_t - vol_bb_lower_t
+ind_vol_t      = f_secureSecurity(syminfo.tickerid, bb_tf, ind_vol)
 ind_vol_ema_t  = ema(ind_vol_t, bb_vol_el)
 
 ////////////////////////////////////////////////////////////////////////
