@@ -22,19 +22,21 @@ use_vol_filter      = input(defval=true,    title='USE Volatility filter', type=
 // Other params
 pos_lag             = input(defval=0,       title='Position Lag', type=input.integer)
 
+///////////////////////////////////////////////////////////////////////
+// Non repainting security function wrapper
+f_secureSecurity(_symbol, _res, _src) => security(_symbol, _res, _src[1], lookahead=barmerge.lookahead_on)
+
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 // Volatility calculation
-vol_bb_basis   = sma(bb_source[1], bb_length)  // Avoid repainting ??
-vol_bb_dev     = bb_mult * stdev(bb_source[1], bb_length)
+vol_bb_basis   = sma(bb_source, bb_length)
+vol_bb_dev     = bb_mult * stdev(bb_source, bb_length)
 vol_bb_upper   = vol_bb_basis + vol_bb_dev
 vol_bb_lower   = vol_bb_basis - vol_bb_dev
+ind_vol        = vol_bb_upper - vol_bb_lower
 
-vol_bb_basis_t = security(syminfo.tickerid, bb_tf, vol_bb_basis)
-vol_bb_upper_t = security(syminfo.tickerid, bb_tf, vol_bb_upper)
-vol_bb_lower_t = security(syminfo.tickerid, bb_tf, vol_bb_lower)
-ind_vol_t      = vol_bb_upper_t - vol_bb_lower_t
+ind_vol_t      = f_secureSecurity(syminfo.tickerid, bb_tf, ind_vol)
 ind_vol_ema_t  = ema(ind_vol_t, bb_vol_el)
 
 ////////////////////////////////////////////////////////////////////////
@@ -114,6 +116,5 @@ strategy.close("S", when=cover)
 plot(orb_high_rangeL, color=color.green, linewidth=2) 
 plot(orb_low_rangeL,  color=color.red, linewidth=2)
 plot(stop_trail_loss, color=color.black, linewidth=1)
-
 // Plot shapes
 plotshape(ind_vol_t >= ind_vol_ema_t, style=shape.diamond, color=color.orange, location=location.belowbar, transp=75)
