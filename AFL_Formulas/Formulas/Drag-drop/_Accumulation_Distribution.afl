@@ -1,0 +1,4 @@
+_SECTION_BEGIN("AccDist");
+Plot( AccDist(), _DEFAULT_NAME(), ParamColor("Color", colorCycle ), ParamStyle("Style") );
+"(Interpretation is not available yet)";
+_SECTION_END();

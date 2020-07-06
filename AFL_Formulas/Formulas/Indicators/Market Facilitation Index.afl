@@ -1,0 +1,15 @@
+function MarketFacilitationIndex()
+{
+  return ( High - Low )/Volume;
+}
+
+mfac = MarketFacilitationIndex();
+rm = ROC( mfac, 1 );
+rv = ROC( Volume, 1 );
+
+Color = IIf( rm > 0 AND rv > 0, colorGreen,
+		 IIf( rm < 0 AND rv < 0, colorBlue,
+		 IIf( rm > 0 AND rv < 0, colorGrey40,
+		 IIf( rm < 0 AND rv > 0, colorRed, colorLightGrey ) ) ) );
+
+Plot( mfac, _DEFAULT_NAME(), Color, ParamStyle("Style", styleHistogram | styleThick, maskHistogram ) );

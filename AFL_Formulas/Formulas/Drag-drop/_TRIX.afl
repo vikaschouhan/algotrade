@@ -1,0 +1,9 @@
+_SECTION_BEGIN("TRIX");
+periods = Param("Periods", 9, 2, 200, 1 );
+Plot( Trix( periods ), _DEFAULT_NAME(), ParamColor("color", colorCycle ), ParamStyle("Style") );
+
+if( Status("action") == actionCommentary )
+{
+ printf( "(Interpretation is not available yet)" );
+}
+_SECTION_END();

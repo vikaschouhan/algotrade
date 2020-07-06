@@ -1,0 +1,172 @@
+EnableTextOutput( 3 ); // enable HTML output into report (Version 5.84 or higher!)
+
+eq = C;
+
+yr = Year();
+mo = Month();
+
+YearChange = yr != Ref( yr, 1 );
+MonChange = mo != Ref( mo, 1 );
+
+FirstYr = 0;
+LastYr = 0;
+
+startbar = 0;
+
+////////////////////////////
+// SKIP non-trading bars
+////////////////////////////
+
+for ( i = 0; i < BarCount; i++ )
+{
+    if ( eq[ i ] )
+    {
+        startbar = i;
+        break;
+    }
+}
+
+////////////////////////////
+// collect yearly / monthly changes in equity
+// into dynamic variables
+////////////////////////////
+
+LastYrValue = eq[ startbar  ];
+LastMoValue = eq[ startbar  ];
+MaxYrProfit = MinYrProfit = 0;
+MaxMoProfit = MinMoProfit = 0;
+
+for ( i = startbar + 1; i < BarCount; i++ )
+{
+    if ( YearChange[ i ] || i == BarCount - 1 )
+    {
+        Chg = 100 * ( -1 + eq[ i ] / LastYrValue );
+        VarSet( "ChgYear" + yr[ i ], Chg );
+
+        MaxYrProfit = Max( MaxYrProfit, Chg );
+        MinYrProfit = Min( MinYrProfit, Chg );
+
+        if ( FirstYr == 0 )
+            FirstYr = yr[ i ];
+
+        LastYr = yr[ i ];
+
+        LastYrValue = eq[ i ];
+    }
+
+    if ( MonChange [ i ] || i == BarCount - 1 )
+    {
+        mon = mo[ i ];
+
+        Chg = 100 * ( -1 + eq[ i ] / LastMoValue );
+
+        VarSet( "ChgMon" + yr[ i ] + "-" + mon, Chg );
+        VarSet( "SumChgMon" + mon, Chg + Nz( VarGet( "SumChgMon" + mon ) ) );
+        VarSet( "SumMon" + mon, 1 + Nz( VarGet( "SumMon" + mon ) ) );
+
+        MaxMoProfit = Max( MaxMoProfit, Chg );
+        MinMoProfit = Min( MinMoProfit, Chg );
+
+        LastMoValue = eq[ i ];
+    }
+}
+
+MonthNames = "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec";
+
+
+function GenProfitTableHTML( )
+{
+    printf( "<table border='1' bordercolor='#000000' cellspacing='0' cellpadding='3'style='border-collapse:collapse;'>\n" );
+
+    printf( "<tr bgcolor='#eeffee' >\n" );
+
+    Header = "Year," + MonthNames + ",Yr%%";
+
+    for ( Col = 0; ( Colname = StrExtract( Header, Col ) ) != ""; Col++ )
+    {
+        printf( "<td><b>" + Colname + "</b></td>" );
+    }
+
+    printf( "</tr>\n" );
+
+    for ( y = FirstYr; y <= LastYr; y++ )
+    {
+        //Color =  ColorRGB( IIf( row == 0 || col == 0 || col == 13, 220, 255 ), 255, IIf( row % 2, 255, 220 ) );
+
+        // new row
+        if ( y % 2 )
+            printf( "<tr bgcolor='#ffffff'>\n<td bgcolor='#eeffff'>" );
+        else
+            printf( "<tr bgcolor='#ffffee'>\n<td bgcolor='#eeffee'>" );
+
+        printf( "<b>%g</b></td>", y );
+
+        for ( m = 1; m <= 12; m++ )
+        {
+            Chg = VarGet( "ChgMon" + y + "-" + m );
+
+            if ( NOT IsNull( Chg ) )
+            {
+                if ( Chg >= 0 )
+                    printf( "<td nowrap>%.1f%%</td>", Chg );
+                else
+                    printf( "<td nowrap><font color='880000'>%.1f%%</font></td>", Chg );
+            }
+            else
+                printf( "<td>N/A</td>" );
+        }
+
+        if ( y % 2 )
+            printf( "<td nowrap bgcolor='#eeffff'>" );
+        else
+            printf( "<td nowrap bgcolor='#eeffee'>" );
+
+        x = VarGet( "ChgYear" + y );
+
+        if ( x >= 0 )
+            printf( "<b>%.1f%%</b></td>", x );
+        else
+            printf( "<font color='880000'><b>%.1f%%</b></font></td>", x );
+
+        printf( "</tr>\n" ); // end row
+    }
+
+
+    printf( "<tr bgcolor='#eeffee' >\n" ); // new row
+
+    printf( "<td><b>Avg</b></td>" );
+
+    for ( m = 1; m <= 12; m++ )
+    {
+        x = Nz( VarGet( "SumChgMon" + m ) / VarGet( "SumMon" + m ) );
+
+        if ( x >= 0 )
+            printf( "<td nowrap><b>%.1f%%</b></td>", x );
+        else
+            printf( "<td nowrap><font color='880000'><b>%.1f%%</b></font></td>", x );
+    }
+
+    printf( "<td>&nbsp;</td>" );
+
+    printf( "</tr></table>\n" );
+
+}
+
+///////////////////////////
+// This function checks if currently selected symbol
+// is portfolio equity
+//////////////////////////
+function CheckSymbol()
+{
+    if ( Name() != "~~~EQUITY" AND Name() != "~~~OSEQUITY" )
+    {
+        printf( "For accurate results switch to ~~~EQUITY symbol<br>" );
+    }
+}
+
+CheckSymbol();
+
+////////////////////////////
+// Main program
+////////////////////////////
+GenProfitTableHTML();

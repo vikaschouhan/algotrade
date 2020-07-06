@@ -1,0 +1,8 @@
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 15, 2, 100, 1 );
+Width = Param("Width", 2, 0, 10, 0.05 );
+Color = ParamColor("Color", colorLightGrey );
+Style = ParamStyle("Style", styleLine | styleNoLabel ) | styleNoLabel;
+Plot( bbt = BBandTop( P, Periods, Width ), "BBTop" + _PARAM_VALUES(), Color, Style ); 
+Plot( bbb = BBandBot( P, Periods, Width ), "BBBot" + _PARAM_VALUES(), Color, Style ); 
+PlotOHLC( bbt, bbt, bbb, bbb, "", ColorBlend( Color, GetChartBkColor(), 0.8 ), styleNoLabel | styleCloud | styleNoRescale, Null, Null, Null, -1 );

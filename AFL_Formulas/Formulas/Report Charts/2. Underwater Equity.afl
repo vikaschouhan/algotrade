@@ -1,0 +1,21 @@
+// Underwater Equity chart
+// (C)2009 AmiBroker.com
+// Should be used only on ~~~EQUITY or ~~~OSEQUITY symbol
+
+
+EQ = C;
+MaxEQ = Highest( EQ );
+DD = 100 * ( Eq - MaxEQ ) / MaxEq;
+MaxDD = Lowest( DD );
+
+Title = StrFormat("Drawdown = %.2g%%, Max. drawdown %.2g%%", DD, LastValue( MaxDD ) );
+
+SetGradientFill( GetChartBkColor(), colorBlue, 0 );
+
+Plot( DD, "Drawdown ", colorBlue, styleGradient | styleLine );
+
+Plot( MaxDD, "Max DD", colorRed, styleNoLabel );
+
+SetChartOptions( 2, 0, chartGridPercent );
+
+if( Name() != "~~~EQUITY" AND Name() != "~~~OSEQUITY"  ) Title = "Warning: wrong ticker! This chart should be used on ~~~EQUITY or ~~~OSEQUITY only";

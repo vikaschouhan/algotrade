@@ -1,0 +1,3 @@
+acc = Param("Acceleration", 0.02, 0, 1, 0.001 );
+accm = Param("Max. acceleration", 0.2, 0, 1, 0.001 );
+Plot( SAR( acc, accm ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style", styleDots | styleNoLine, maskDefault | styleDots | styleNoLine ) );

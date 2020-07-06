@@ -1,0 +1,11 @@
+_SECTION_BEGIN("OBV");
+
+Plot( OBV(), _DEFAULT_NAME(), ParamColor("Color", colorCycle ), ParamStyle("Style")  );
+
+if( Status("action") == actionCommentary )
+{
+printf("Interpretation is NOT available yet)");
+printf("On Balance Volume is a running total of volume. It shows if volume is flowing into or out of a security.");
+}
+
+_SECTION_END();

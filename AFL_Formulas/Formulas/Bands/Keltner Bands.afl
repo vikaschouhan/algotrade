@@ -1,0 +1,12 @@
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 15, 2, 300, 1 );
+Width = Param("Width", 2, 0, 10, 0.05 );
+Color = ParamColor("Color", colorCycle );
+Style = ParamStyle("Style", styleLine | styleNoLabel);
+
+CenterLine = MA( P, Periods );
+KTop   = CenterLine + Width * ATR( Periods );
+KBot = CenterLine - Width * ATR( Periods );
+
+Plot( KTop, "KBTop" + _PARAM_VALUES(), Color, Style ); 
+Plot( KBot, "KBBot" + _PARAM_VALUES(), Color, Style ); 

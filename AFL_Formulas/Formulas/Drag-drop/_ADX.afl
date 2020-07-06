@@ -1,0 +1,76 @@
+_SECTION_BEGIN("ADX");
+// ADX/DMI Indicator
+range = Param("Periods", 14, 2, 200, 1 );
+Plot( ad = ADX(range), _DEFAULT_NAME(), ParamColor( "ADX color", colorBlue ), ParamStyle("ADX style", styleThick ) );
+Plot( pd = PDI(range), "+DI", ParamColor( "+DI color", colorGreen ), ParamStyle("+DI style") );
+Plot( md = MDI(range), "-DI", ParamColor( "-DI color", colorRed ), ParamStyle("-DI style") );
+
+if( Status("action") == actionCommentary )
+{
+ep = IIf( pd > md, 
+          ValueWhen( Cross( pd, md ), High ), 
+          ValueWhen( Cross( md, pd ), Low ) );
+
+good = IIf( pd > md, 
+            High > ep, 
+            Low < ep );
+
+bs = IIf( pd > md, 
+          BarsSince( Cross( pd, md ) ), 
+          BarsSince( Cross( md, pd ) ) );
+
+printf("Directional movement:\n");
+printf("\nPlus directional movement index line (+DI) is currently "+
+WriteIf( pd > md,"above", "below")+
+" minus directional movement index (-DI)");
+
+printf("\nIt crossed "+ 
+WriteIf( pd > md, "above", "below" ) 
++ " " + 
+WriteVal( bs, 1.0 ) + " bars ago.\n");
+
+
+printf("\nWelles Wilder (the author of Directional Movement indicator) suggests buying when the +DI rises above the -DI and selling when the +DI falls below the -DI.");
+
+printf("\n" + WriteIf( bs < 4, 
+"\nSince the crossover happened just recently, this may be a good opportunity to enter " + 
+WriteIf( pd > md, "long" , "short" ) + 
+" trade (or close already open "+
+WriteIf( pd > md, "short", "long")+
+" trade (if any)\n",
+"\nCrossover happened more than 3 bars ago, so it is too late to act on this signal.\n")+
+
+WriteIf( bs < 4,
+"Wilder, however, suggest to qualify simple +DI/-DI crossover with 'extreme point rule'. When the +DI rises above the -DI, the extreme price is the high price on the day the lines cross. When the +DI falls below the -DI, the extreme price is the low price on the day the lines cross. The extreme point is then used as a trigger point at which you should implement the trade.\n","")+ 
+WriteIf( bs < 4, "Current extreme point value is " + 
+WriteVal( ep ) + "." +
+WriteIf( good, " Since today's " + 
+WriteIf( pd > md, 
+"high ("+WriteVal( High ) +") is higher", 
+"low ("+WriteVal(Low)+") is lower" ) + 
+" than extreme point so the rule is fulfilled and " + 
+WriteIf( pd > md, "buy","sell")+
+" signal is confirmed.\n",
+"Until now this rule is NOT fulfilled, so it is suggested to wait for the confirmation.\n"),""));
+
+falling = ROC( Ad, 2 ) < 0;
+
+strength = IIf( Ad < 15 OR ( Ad < 25 AND falling ), 0,
+           IIf( Ad < 25 OR ( Ad < 35 AND falling ), 1,
+                2 ) );
+
+printf("\nTrend strength:\n");
+
+printf("\nThe ADX is currently " + WriteVal( Ad ) + " and "
++WriteIf( falling, "falling.", "rising." )); 
+
+printf("\nThis suggests that the trend is "+
+WriteIf( strength == 0,
+"rather weak or very weak. Important: when trend is weak directional movement system generates signal too frequently and whipsaws can 'eat' all your profits.", 
+WriteIf( strength == 2, 
+"rather strong.",
+"medium in its strength.")));
+
+printf("\n\nThis commentary is not a recommendation to buy or sell. Use at your own risk.");
+}
+_SECTION_END();

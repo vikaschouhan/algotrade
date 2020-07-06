@@ -1,0 +1,43 @@
+_SECTION_BEGIN("CCI");
+periods = Param( "Periods", 14, 2, 200, 1 );
+Plot( i1 = CCI( periods ), _DEFAULT_NAME(), ParamColor( "Color",  colorCycle ), ParamStyle("Style")  );
+
+if( Status("action") == actionCommentary )
+{
+printf("(preliminary interpretation code)\n");
+
+Buy=Cross( i1, 100 );
+Sell = Cross( 100, i1 );
+Short=Cross( -100, i1 );
+Cover = Cross( i1, -100 );
+
+printf("\nCCI("+periods+") =" + WriteVal(i1));
+
+printf("\n\nA price momentum indicator developed by Donald R. Lambert - it measures price excursions from the mean price as a statistical variation");
+
+
+printf("\n\nCCI is now in "+
+WriteIf( i1 < -100, "oversold", 
+WriteIf( i1 > 100,  "overbought", "neutral" )) +
+" range");
+
+bsbuy  = BarsSince( Buy );
+bssell = BarsSince( Sell );
+bsshort  = BarsSince( Short );
+bscover = BarsSince( Cover );
+
+printf("\n\nCCI has generated "+
+WriteIf( bsbuy > 5 AND bssell > 5 AND bsshort > 5 AND bscover > 5, "no signals during last 5 periods.",
+WriteIf( bsbuy < bssell AND bsbuy < bsshort AND bsbuy < bscover, 
+"buy signal " + WriteVal( bsbuy, 3.0  ),
+WriteIf( bssell < bsbuy AND bssell < bsshort AND bssell < bscover, 
+"sell signal " + WriteVal( bssell, 3.0),
+WriteIf( bsshort < bsbuy AND bsshort < bssell AND bsshort < bscover, 
+"sell short signal " + WriteVal( bsshort, 3.0),
+"cover short signal " + WriteVal( bscover, 3.0)
+))) + " periods ago."));
+
+}
+_SECTION_END();
+
+ 

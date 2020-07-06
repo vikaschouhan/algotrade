@@ -1,0 +1,19 @@
+_SECTION_BEGIN("Individual");
+#include @LastBacktestFormula
+MaxGraph=0;GraphXSpace=5;
+GraphZOrder=1;
+Plot( Equity( 0, -2 ), "Equity", -8, styleArea );
+
+if( ParamToggle("Show Buy-and-Hold?", "No|Yes", 1 ) )
+{
+ /* now buy and hold simulation */
+ Short=Cover=0;
+ Buy=Status("firstbarintest");
+ Sell=Status("lastbarintest");
+ SetTradeDelays(0,0,0,0); PositionSize = -100;
+ ApplyStop(0,0,0,0);
+ ApplyStop(1,0,0,0);
+ ApplyStop(2,0,0,0);
+ Plot( Equity( 0, -2 ), "Buy&Hold", -9 );
+}
+_SECTION_END();

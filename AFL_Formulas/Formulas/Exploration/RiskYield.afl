@@ -1,0 +1,19 @@
+// This is AFL equivalent of Risk-Yield map
+// Note that this exploration should be run on 
+// WEEKLY data
+// it calculates average weekly gain (yield)
+// and standard deviation of gains (risk)
+
+Filter=Status("lastbarinrange");
+Length = SelectedValue( BarIndex() );
+Chg = ROC( C, 1 ); //one bar yield
+yield = MA( Chg, Length - 1);
+risk =  StDev( Chg, Length - 1);
+AddColumn(yield,"yield");
+AddColumn(risk,"risk");
+
+Clr = ColorHSB( 2 * Status("stocknum") % 255, 255, 255 );
+
+
+XYChartAddPoint( "Risk/Yield", Name(), risk[ Length ], yield[ Length ] , Clr );
+XYChartSetAxis("Risk/Yield", "Risk[%]", "Yield[%]");

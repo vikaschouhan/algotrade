@@ -1,0 +1,6 @@
+r1 = Param( "Fast avg", 12, 2, 200, 1 );
+r2 = Param( "Slow avg", 26, 2, 200, 1 );
+r3 = Param( "Signal avg", 9, 2, 200, 1 );
+Plot( ml = MACD(r1, r2), StrFormat(_SECTION_NAME()+"(%g,%g)", r1, r2), ParamColor("MACD color", colorRed ), ParamStyle("MACD style") );
+Plot( sl = Signal(r1,r2,r3), "Signal" + _PARAM_VALUES(), ParamColor("Signal color", colorBlue ), ParamStyle("Signal style") );
+Plot( ml-sl, "MACD Histogram", ParamColor("Histogram color", colorDefault ), styleNoTitle | ParamStyle("Histogram style", styleHistogram | styleNoLabel, maskHistogram ) );

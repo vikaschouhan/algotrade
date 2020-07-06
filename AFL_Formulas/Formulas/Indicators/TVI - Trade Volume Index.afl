@@ -1,0 +1,14 @@
+function TradeVolumeIndex( MinTickVal )
+{
+  Change = C - Ref( C, -1 );
+
+  Direction =	IIf( Change > MinTickVal, 1,
+				IIf( Change < -MinTickVal, -1, 0 ) );
+
+  Direction = ValueWhen( Direction != 0, Direction );
+
+  return Cum( Direction * Volume );
+}
+
+Plot( TradeVolumeIndex( Param("Min Tick Value", 0.1, 0, 10, 0.01 ) ),
+		_DEFAULT_NAME(), ParamColor("Color", ColorCycle ) );

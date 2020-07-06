@@ -1,0 +1,46 @@
+_SECTION_BEGIN("MFI");
+
+periods = Param( "Periods", 14, 2, 200, 1 );
+Plot( vmfi = MFI(periods), _DEFAULT_NAME(), ParamColor("Color", colorCycle ), ParamStyle("Style") );
+
+if( Status("action") == actionCommentary )
+{
+
+Buy = Cross( vmfi, 20 );
+Sell = Cross( 80, vmfi );
+
+printf("The current value for the MFI(" + periods + ") is " + WriteVal( vmfi ) );
+
+printf("\n\nThe Money Flow Index (MFI) is a momentum indicator that measures the strength of money flowing in and out of a security. It is related to MFI but additionaly accounts for volume.\n");
+
+printf("\nTops and Bottoms:\n");
+
+printf(WriteIf( vmfi > 80, "The MFI is above 80.  This is where it usually tops.  The MFI usually forms tops and bottoms before the underlying security.",
+WriteIf( vmfi < 20, "The MFI is below 20.  This is where it usually bottoms.  The MFI usually forms tops and bottoms before the underlying security.",
+"The MFI is not currently in a topping (above 80) or bottoming (below 20) range. " 
++ WriteIf( Cross( 80, vmfi ), "However, the MFI just crossed below 80 from a topping formation.  This is a bearish sign.",
+WriteIf( Cross( vmfi, 20 ), "However, the MFI just crossed above 20 from a bottoming formation.  This is a bullish sign.", "" ) ) ) ));
+ 
+bars20 = BarsSince( Buy );
+bars80 = BarsSince( Sell );
+
+printf("\n\nBuy/Sell signals:");
+printf("\nA buy or sell signal is generated when the MFI moves out of an overbought/oversold area. \nThe last signal was a "+
+WriteIf( bars20 < bars80, "buy", WriteIf( bars20 > bars80, "sell", "" ))+
+WriteVal( Min( bars20, bars80 ), 3.0 ) + " period(s) ago.");
+
+printf("\n\nDivergence:\n");
+printf(WriteIf( Close >= HHV( Close, 14 ) AND vmfi < HHV( vmfi, 14 ), 
+"The security price has set a new 14-day high while the MFI has not.  This is a bearish divergence.",
+WriteIf( vmfi >= HHV( vmfi, 14 ) AND Close < HHV( Close, 14 ), 
+"The MFI has set a new 14-day high while the security price has not.  This is a bullish divergence.",
+WriteIf( Close <= LLV( Close, 14 ) AND vmfi > LLV( vmfi, 14 ), 
+"The security price has set a new 14-day low while the MFI has not.  This is a bullish divergence.",
+WriteIf( vmfi <= LLV( vmfi, 14) AND Close > LLV(Close,14), 
+"The MFI has set a new 14-day low while the security price has not.  This is a bearish divergence.",
+"The MFI and price are not diverging." ) ) ) )); 
+
+printf("\n\nThis commentary is not a recommendation to buy or sell. Use at your own risk.");
+
+}
+_SECTION_END();

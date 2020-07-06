@@ -1,0 +1,12 @@
+_SECTION_BEGIN("Stochastic Slow");
+periods = Param( "Periods", 15, 1, 200, 1 );
+Ksmooth = Param( "%K avg", 3, 1, 200, 1 );
+Plot( StochK( periods , Ksmooth), "%K"+_PARAM_VALUES(), ParamColor( "%K color", colorCycle ), ParamStyle("%K style") );
+Dsmooth = Param( "%D avg", 3, 1, 200, 1 );
+Plot( StochD( periods , Ksmooth, DSmooth ), "%D"+_PARAM_VALUES(), ParamColor( "%D color", colorCycle ), ParamStyle("%D style") );
+
+if( Status("action") == actionCommentary )
+{
+ printf("(Interpretation is not available yet)");
+}
+_SECTION_END();

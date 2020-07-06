@@ -1,0 +1,9 @@
+_SECTION_BEGIN("Relative Strength");
+base = ParamStr("RS base ticker", GetBaseIndex() );
+Plot( RelStrength(base), _SECTION_NAME() + "(" + base + ")", ParamColor( "color", colorCycle ), ParamStyle("Style")  );
+
+if( Status("action")==actionCommentary )
+{
+ printf("(Interpretation is not available yet)");
+}
+_SECTION_END();

@@ -1,0 +1,3 @@
+Plot( OscV( Param("Periods (fast)", 12, 1, 100 ),
+			  Param("Periods (slow)", 26, 1, 100 ) ),
+		_DEFAULT_NAME(), ParamColor("Color", ColorCycle ) );

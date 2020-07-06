@@ -1,0 +1,11 @@
+LookBack = Param("Lookback", 13, 2, 100 );
+Smooth1 = Param("Smooth 1", 25, 1, 100 );
+Smooth2 = Param("Smooth 2", 2, 1, 100 );
+
+HH = HHV( H, LookBack );
+LL = LLV( L, LookBack );
+
+StoMom = 100 * EMA( EMA( C - 0.5 * ( HH + LL ), Smooth1 ), Smooth2 ) / 
+( 0.5 * EMA( EMA( HH - LL, Smooth1 ), Smooth2 ) );
+
+Plot(StoMom, _DEFAULT_NAME(), ParamColor("Color", ColorCycle ) );

@@ -1,0 +1,2 @@
+periods = Param( "Periods", 15, 1, 200, 1 );
+Plot( ATR(periods), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style") );

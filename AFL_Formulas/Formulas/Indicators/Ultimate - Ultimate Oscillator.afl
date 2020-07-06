@@ -1,0 +1,4 @@
+r1 = Param("Fast avg", 7, 2, 200, 1 );
+r2 = Param("Med avg", 14, 2, 200, 1 );
+r3 = Param("Slow avg", 28, 2, 200, 1 );
+Plot( Ultimate( r1, r2, r3 ), _DEFAULT_NAME(), ParamColor("Color", colorCycle ), ParamStyle("Style"));

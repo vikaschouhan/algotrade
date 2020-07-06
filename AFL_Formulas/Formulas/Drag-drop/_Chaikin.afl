@@ -1,0 +1,10 @@
+_SECTION_BEGIN("Chaikin");
+r1 = Param( "Fast Avg", 9, 2, 200, 1 );
+r2 = Param( "Slow avg", 14, 2, 200, 1 );
+Plot( Chaikin(r1,r2), _DEFAULT_NAME(), ParamColor( "Color",  colorCycle ), ParamStyle("Style")  );
+
+if( Status("action") == actionCommentary )
+{
+ printf("(Interpretation is not available yet)");
+}
+_SECTION_END();

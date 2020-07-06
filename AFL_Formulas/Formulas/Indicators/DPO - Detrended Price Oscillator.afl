@@ -1,0 +1,8 @@
+function DetrendedPriceOsc( Periods )
+{
+ return C - Ref( MA( C, Periods ), -( 1 + Periods/2 ) );
+}
+
+Plot( DetrendedPriceOsc( Param("Periods", 20, 1, 100 ) ),
+		_DEFAULT_NAME(),
+		ParamColor("Color", ColorCycle ) );

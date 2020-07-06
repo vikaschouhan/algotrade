@@ -1,0 +1,6 @@
+function PVT()
+{
+	return Cum( Volume * ROC( C, 1 ) * 0.01 );
+}
+
+Plot( PVT(), _DEFAULT_NAME(), ParamColor( "Color", ColorCycle ) );

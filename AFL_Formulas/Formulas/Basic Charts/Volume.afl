@@ -1,0 +1,1 @@
+Plot( Volume, _DEFAULT_NAME(), ParamColor("Color", colorBlueGrey ), ParamStyle( "Style", styleHistogram | styleOwnScale | styleThick, maskHistogram  ) );

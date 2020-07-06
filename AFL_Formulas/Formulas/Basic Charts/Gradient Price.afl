@@ -1,0 +1,6 @@
+SetChartOptions(0,chartShowArrows|chartShowDates); 
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) )); 
+Ct = ParamColor("Top", colorLightOrange); 
+Cb = ParamColor("Bottom", colorPaleGreen );
+SetGradientFill( Ct, Cb );
+Plot( C, "Close", ColorBlend( Cb, colorGrey50 ) , styleGradient | styleLine, Null, Null, 0, -1 );

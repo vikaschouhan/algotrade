@@ -1,0 +1,2 @@
+periods = Param("Periods", 9, 2, 200, 1 );
+Plot( Trix( periods ), _DEFAULT_NAME(), ParamColor("color", colorCycle ), ParamStyle("Style") );

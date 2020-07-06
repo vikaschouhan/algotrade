@@ -1,0 +1,1 @@
+Plot( OBV(), _DEFAULT_NAME(), ParamColor("Color", colorCycle ), ParamStyle("Style")  );

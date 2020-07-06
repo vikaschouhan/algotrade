@@ -1,0 +1,9 @@
+Buy = Cross( MACD(), Signal() );
+Sell = Cross( Signal(), MACD() );
+
+// trade on next bar open
+SetTradeDelays( 1, 1, 1, 1 );
+BuyPrice = SellPrice = Open; 
+
+// trade size: 25% of current portfolio equity
+SetPositionSize( 25, spsPercentOfEquity );

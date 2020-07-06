@@ -1,0 +1,7 @@
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 15, 2, 300, 1 );
+Width = Param("Width", 2, 0, 10, 0.05 );
+Color = ParamColor("Color", colorCycle );
+Style = ParamStyle("Style");
+Plot( BBandTop( P, Periods, Width ), "BBTop" + _PARAM_VALUES(), Color, Style ); 
+Plot( BBandBot( P, Periods, Width ), "BBBot" + _PARAM_VALUES(), Color, Style ); 

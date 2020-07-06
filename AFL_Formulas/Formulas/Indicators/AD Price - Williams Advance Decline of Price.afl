@@ -1,0 +1,11 @@
+
+function AdvDecWilliams()
+{
+ C1 = Ref( C, -1 );
+ trhi = IIf( C1 > High, C1, High );
+ trlo = IIf( C1 < Low, C1, Low );
+
+ return Cum( IIf( C > C1, Close - trlo, Close - trhi ) );
+}
+
+Plot( AdvDecWilliams(), _DEFAULT_NAME(), ParamColor("Color", ColorCycle ) );

@@ -1,0 +1,6 @@
+Title = "Portfolio Equity = " + C;
+
+SetGradientFill( colorLightOrange, colorPaleGreen  );
+Plot( C, "Portfolio Equity", ColorBlend( colorPaleGreen, colorBlack ), styleGradient | styleLine, Null, Null, 0, -1 );
+
+//SetChartOptions(3, chartShowDates );

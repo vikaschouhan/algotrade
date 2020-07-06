@@ -1,0 +1,8 @@
+function PercentR( periods )
+{
+ return -100 * ( HHV( H, periods ) - C )/( HHV( H, periods ) - LLV( L, periods ) ); 
+}
+
+Plot( PercentR( Param("Periods", 14, 2, 100 ) ),
+		_DEFAULT_NAME(),
+		ParamColor("Color", ColorCycle ) );

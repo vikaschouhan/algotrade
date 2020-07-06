@@ -1,0 +1,12 @@
+function DailyVolumeIndicator()
+{
+  midpoint = ( High + Low ) / 2;
+
+  dv = Volume * (( Close - midpoint ) / midpoint);
+ 
+  return Cum( dv );
+}
+
+Plot( DailyVolumeIndicator(), _DEFAULT_NAME(), ParamColor( "Color", ColorCycle ) );
+  
+ 

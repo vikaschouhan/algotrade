@@ -1,0 +1,7 @@
+function ChaikinVolatility( periods )
+{
+ return ROC( EMA( High - Low, periods ), periods );
+}
+
+Plot( ChaikinVolatility( Param("Periods", 10, 2, 100 ) ),
+		_DEFAULT_NAME(), ParamColor( "Color", ColorCycle ) );

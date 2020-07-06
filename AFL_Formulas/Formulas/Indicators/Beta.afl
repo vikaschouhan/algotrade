@@ -1,0 +1,13 @@
+
+function Beta( BaseSymbol, N )
+{
+ Chg = ROC( C, 1 );
+ ChgBase = ROC( Foreign( BaseSymbol, "C" ), 1 );
+
+ return ( N * Sum( Chg * ChgBase , N ) - Sum( Chg, N) * Sum( ChgBase, N ) ) /
+        ( N * Sum( ChgBase ^ 2 , N ) -  Sum( ChgBase, N ) ^ 2 );
+}
+
+symbol = ParamStr( "Symbol", "^NDX" );
+
+Plot( Beta( symbol, Param("Periods", 21, 2, 100 ) ), _DEFAULT_NAME(), ParamColor( "Color", ColorCycle ) );

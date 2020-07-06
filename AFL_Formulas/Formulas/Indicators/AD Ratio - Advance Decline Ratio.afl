@@ -1,0 +1,1 @@
+Plot( AdvIssues()/DecIssues(), _DEFAULT_NAME(), ParamColor( "Color", ColorCycle ) );

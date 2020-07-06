@@ -1,0 +1,29 @@
+
+function SwingIndex( Limit )
+{
+ Hy = Ref( H, -1 );
+ Cy = Ref( C, -1 );
+ Ly = Ref( L, -1 );
+ Oy = Ref( O, -1 );
+  
+ r1 = abs( H - Cy );
+ r2 = abs( L - Cy );
+ r3 = abs( H - L );
+ r4 = abs( Cy - Oy );
+ 
+ k = Max( r1, r2 ); 
+ 
+ r = IIf( r1 >= Max( r2, r3 ), r1 - r2/2 + r4/4,
+     IIf( r2 >= Max( r1, r3 ), r2 - r1/2 + r4/4,
+          r3 + r4/4 ) );
+ 
+ return IIf( r == 0, 0, 50 * ( ( C - Cy + 0.5 * ( C - O ) + 0.25 * ( Cy - Oy ) ) / r ) * k/Limit );
+}
+  
+function AccumulationSwingIndex( Limit )
+{
+  return Cum( SwingIndex( Limit ) );
+}
+
+Plot( AccumulationSwingIndex( Param("Limit", 100, 1, 1000 ) ), 
+        _DEFAULT_NAME(), ParamColor( "Color", colorRed ) );

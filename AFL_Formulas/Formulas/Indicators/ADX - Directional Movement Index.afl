@@ -1,0 +1,4 @@
+range = Param("Periods", 14, 2, 200, 1 );
+Plot( ADX(range), _DEFAULT_NAME(), ParamColor( "ADX color", colorBlue ), ParamStyle("ADX style", styleThick ) );
+Plot( PDI(range), "+DI", ParamColor( "+DI color", colorGreen ), ParamStyle("+DI style") );
+Plot( MDI(range), "-DI", ParamColor( "-DI color", colorRed ), ParamStyle("-DI style") );

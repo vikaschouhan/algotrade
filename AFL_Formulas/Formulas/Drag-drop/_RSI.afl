@@ -1,0 +1,58 @@
+_SECTION_BEGIN("RSI");
+SetChartOptions(0,0,chartGrid30|chartGrid70);
+periods = Param( "Periods", 15, 1, 200, 1 );
+Plot( vrsi = RSI( periods), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style")  );
+
+if( Status("action") == actionCommentary ) 
+{
+
+Buy = Cross( vrsi, 30 );
+Sell = Cross( 70, vrsi );
+
+printf( "The current value for the RSI" + periods + " is " + WriteVal( vrsi ) );
+
+printf("\n\nThe RSI, written by J. Welles Wilder in 1978, can be used in several different ways to analyze a chart.\n");
+
+printf("Tops and Bottoms:\n\n");
+
+printf( 
+WriteIf( vrsi > 70, "The RSI is above 70.  This is where it usually tops.  The RSI usually forms tops and bottoms before the underlying security.",
+WriteIf( vrsi < 30, "The RSI is below 30.  This is where it usually bottoms.  The RSI usually forms tops and bottoms before the underlying security.",
+"The RSI is not currently in a topping (above 70) or bottoming (below 30) range. " 
++ WriteIf( Cross( 70, vrsi ), "However, the RSI just crossed below 70 from a topping formation.  This is a bearish sign.",
+WriteIf( Cross( vrsi, 30 ), "However, the RSI just crossed above 30 from a bottoming formation.  This is a bullish sign.", "" ) ) ) ) ); 
+
+bars30 = BarsSince( Buy );
+bars70 = BarsSince( Sell );
+
+printf("\n\nBuy/Sell signals:");
+printf("\nA buy or sell signal is generated when the RSI moves out of an overbought/oversold area. \nThe last signal was a "+
+WriteIf( bars30 < bars70, "buy", WriteIf( bars30 > bars70, "sell", "" ))+
+WriteVal( Min( bars30, bars70 ), 3.0 ) + " period(s) ago.");
+
+printf("\n\nChart Formations:");
+
+printf("\nThe RSI often forms chart patterns (such as head and shoulders or rising wedges) and support/resistance levels that may or may not be visible on the price chart.  "+
+"Since the analysis of chart patterns/formations is subjective, the automatic interpretator cannot find them.  Please visually inspect the chart and look for such patterns.");
+
+printf("\n\nFailure Swings (also known as support or resistance penetrations or breakouts):");
+printf(
+WriteIf( vrsi >= HHV( vrsi, 14 ), "The RSI has just reached its highest value in the last 14 period(s).  This is bullish.",
+WriteIf( vrsi <= LLV( vrsi, 14 ), "The RSI has just reached its lowest value in the last 14 period(s).  This is bearish.",
+"The RSI does not currently show any Failure Swings." ) ) );
+
+printf("\n\nDivergence:\n");
+printf(
+WriteIf( Close >= HHV( Close, 14 ) AND vrsi < HHV( vrsi, 14 ), 
+"The security price has set a new 14-day high while the RSI has not.  This is a bearish divergence.",
+WriteIf( vrsi >= HHV( vrsi, 14 ) AND Close < HHV( Close, 14 ), 
+"The RSI has set a new 14-day high while the security price has not.  This is a bullish divergence.",
+WriteIf( Close <= LLV( Close, 14 ) AND vrsi > LLV( vrsi, 14 ), 
+"The security price has set a new 14-day low while the RSI has not.  This is a bullish divergence.",
+WriteIf( vrsi <= LLV( vrsi, 14) AND Close > LLV(Close,14), 
+"The RSI has set a new 14-day low while the security price has not.  This is a bearish divergence.",
+"The RSI and price are not diverging." ) ) ) )); 
+
+printf("\nThis commentary is not a recommendation to buy or sell. Use at your own risk.");
+}
+_SECTION_END();

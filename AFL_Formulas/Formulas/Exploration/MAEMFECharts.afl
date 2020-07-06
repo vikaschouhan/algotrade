@@ -1,0 +1,60 @@
+// XY chart coding example
+// This formula generates 2 X-Y scatter charts that display relationship between
+// final trade profit and MFE and MAE
+
+Buy = Cross( MACD(), Signal());
+Sell = Cross( Signal(), MACD() );
+Short = False;
+Cover = False;
+
+Eq = Equity( 1 ); // single-security equity  this evaluates stops (if you use them) and removes extra signals 
+
+Entry = Buy OR Short;
+EqAtEntry = ValueWhen( Entry, Eq ); 
+Profit = 100 * ( Eq - EqAtEntry ) / EqAtEntry; // percent profit
+
+// MAE and MFE below use CLOSING equity, MAE and MFE in the report use high/low price
+MAE = 100 * ( LowestSince( Entry, Eq ) - EqAtEntry ) / EqAtEntry; // percent MAE 
+MFE = 100 * ( HighestSince( Entry, Eq ) - EqAtEntry ) / EqAtEntry; // percent MAE 
+
+bi = BarIndex();
+
+Len = bi - ValueWhen( Entry, bi ); 
+
+EntryPrice = ValueWhen( Entry, BuyPrice );
+// if you prefer MAE/MFE using high/low price 
+// uncomment the lines below (long only Version)
+MAE = 100 * ( LowestSince( Entry, Low ) - EntryPrice ) / EntryPrice ; // percent MAE using low
+MFE = 100 * ( HighestSince( Entry, High ) - EntryPrice ) / EntryPrice ; // percent MAE using high
+
+Exit = Sell OR Cover;
+dt = DateTime();
+Clr = ColorHSB( Status("stocknum"), 255, 255 );
+for( bar = 0; bar < BarCount; bar++ )
+{
+	if( Exit[ bar ] )
+   {
+		// item text consists of two parts
+		// first part (before \t) is a item name displayed immediatelly on XY chart
+		// second part (after \t) is a tooltip hint text that is displayed in the tooltip
+		// when you hover on given item
+		// here we will only use hint text
+		HintText = "\t" + Name()+"@"+ DateTimeToStr( dt[ bar ] );
+
+		XYChartAddPoint( "Profit vs MAE", HintText, MAE[ bar ], Profit[ bar ],Clr );
+		XYChartAddPoint( "Profit vs MFE", HintText, MFE[ bar ], Profit[ bar ], Clr );
+		XYChartAddPoint( "Profit vs trade length", HintText, Len[ bar ], Profit[ bar ], Clr );
+	}
+}
+
+XYChartSetAxis( "Profit vs MAE", "[MAE]", "[Profit]" );
+XYChartSetAxis( "Profit vs MFE", "[MFE]", "[Profit]" );
+XYChartSetAxis( "Profit vs trade length", "[Length]", "[Profit]"  );
+
+
+Filter = Exit;
+AddColumn( Eq, "Equity" );
+AddColumn( Profit, "Profit" );
+AddColumn( MAE, "MAE" );
+AddColumn( MFE, "MFE" );
+AddColumn( Len, "trade length" );

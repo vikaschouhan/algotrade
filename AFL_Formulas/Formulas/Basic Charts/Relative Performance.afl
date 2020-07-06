@@ -1,0 +1,15 @@
+_N( TickerList = ParamStr("Tickers", "^DJI,MSFT,GE") );
+NumBars = 20;
+fvb = Status("firstvisiblebar");
+Plot( 100 * ( C - C[ fvb ] ) / C[ fvb ], Name(), colorBlue );
+for( i = 0; ( symbol = StrExtract( TickerList, i ) ) != ""; i++ )
+{
+ fc = Foreign( symbol, "C" );
+
+ if( ! IsNull( fc[ 0 ] ) )
+ {
+   Plot( 100 * ( fc - fc[ fvb ] )/ fc[ fvb ], symbol, colorLightOrange + ( (2*i) % 15 ), styleLine );
+ }
+}
+PlotGrid( 0, colorYellow );
+_N( Title = "{{NAME}} - Relative Performance [%]: {{VALUES}}" );

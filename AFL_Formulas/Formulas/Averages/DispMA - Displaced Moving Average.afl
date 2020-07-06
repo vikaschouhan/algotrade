@@ -1,0 +1,14 @@
+P = ParamField("Field");
+Type = ParamList("Type", "Simple,Exponential,Double Exponential,Tripple Exponential,Wilders,Weighted");
+Periods = Param("Periods", 30, 2, 300 );
+Displacement = Param("Displacement", 15, -50, 50 );
+m = 0;
+
+if( Type == "Simple" ) 					m = MA( P, Periods );
+if( Type == "Exponential" ) 			m = EMA( P, Periods );
+if( Type == "Double Exponential" ) 	m = DEMA( P, Periods );
+if( Type == "Tripple Exponential" ) 	m = TEMA( P, Periods );
+if( Type == "Wilders" ) 				m = Wilders( P, Periods );
+if( Type == "Weighted" ) 				m = WMA( P, Periods );
+
+Plot( m, _DEFAULT_NAME(), ParamColor("Color", ColorCycle), ParamStyle("Style"), 0, 0, Displacement );

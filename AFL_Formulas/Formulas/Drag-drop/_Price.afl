@@ -1,0 +1,105 @@
+_SECTION_BEGIN("Price");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) Vol " +WriteVal( V, 1.0 ) +" {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 )) ));
+Plot( C, "Close", ParamColor("Color", colorDefault ), styleNoTitle | ParamStyle("Style") | GetPriceStyle() ); 
+_SECTION_END();
+
+_SECTION_BEGIN("MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 15, 2, 200, 1 );
+Plot( MA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style", styleLine | styleNoLabel ) | styleNoRescale ); 
+_SECTION_END();
+
+_SECTION_BEGIN("Mid MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 45, 2, 300, 1 );
+Plot( MA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style", styleHidden | styleLine | styleNoLabel ) | styleNoRescale ); 
+_SECTION_END();
+
+_SECTION_BEGIN("Long MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 100, 2, 400, 1 );
+Plot( MA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style", styleHidden | styleLine | styleNoLabel ) | styleNoRescale ); 
+_SECTION_END();
+
+_SECTION_BEGIN("BBands");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 15, 2, 100, 1 );
+Width = Param("Width", 2, 0, 10, 0.05 );
+Color = ParamColor("Color", colorLightGrey );
+Color = ColorBlend( Color,  GetChartBkColor(), 0.5 );
+Style = ParamStyle("Style", styleLine | styleNoLabel ) | styleNoRescale;;
+Plot( bbt = BBandTop( P, Periods, Width ), "BBTop" + _PARAM_VALUES(), Color, Style ); 
+Plot( bbb = BBandBot( P, Periods, Width ), "BBBot" + _PARAM_VALUES(), Color, Style ); 
+PlotOHLC( bbt, bbt, bbb, bbb, "", ColorBlend( Color, GetChartBkColor(), 0.7 ), styleNoLabel | styleCloud | styleNoRescale, Null, Null, Null, -1 );
+_SECTION_END();
+
+_SECTION_BEGIN("Price Interpretation");
+movshort = ParamField("Short Time MA", 8 );
+movmed = ParamField("Mid Time MA", 9 );
+movlong = ParamField("Long Time MA", 10 );
+btop = ParamField("BBTop", 11 );
+bbot = ParamField("BBBottom", 12 );
+if( Status("action") == actionCommentary )
+{
+width = btop - bbot;
+lslop = LinRegSlope( C, 30 ) + 100;
+lslo = LLV( lslop, 90 );
+lshi = HHV( lslop, 90 );
+lswidth = lshi - lslo;
+trend = 100*( lslop - lslo )/lswidth;
+
+mawidth = MA( width, 100 );
+relwidth = 100*(width - mawidth)/mawidth;
+
+_N( tname = Name()+"("+FullName()+")" );
+
+printf("Price and moving averages:\n");
+printf( tname + " has closed " + WriteIf( C > movshort, "above" , "below" ) + " its Short time moving average. ");
+
+printf("\nShort time moving average is currently " + WriteIf( movshort > movmed, "above", "below") + " mid-time, AND " + WriteIf( movshort > movlong, "above", "below" ) + " long time moving averages.");
+
+printf("\nThe relationship between price and moving averages is: "+
+WriteIf( C > movshort AND movshort > movmed, "bullish",
+WriteIf( C < movshort AND movshort < movmed, "bearish", "neutral" ) ) + " in short-term, and "+
+WriteIf( movshort > movmed AND movmed > movlong , "bullish",
+WriteIf( movshort < movmed AND movmed < movlong, "bearish", "neutral" ) ) + " in mid-long term. ");
+
+printf("\n\nBollinger Bands:\n");
+printf(tname+ " has closed " + 
+WriteIf( C < bbot, "below the lower band by " +
+WriteVal( 100 *( bbot-C )/ width, 1.1 ) + "%%. " +
+WriteIf( trend < 30, " This combined with the steep downtrend can suggest that the downward trend in prices has a good chance of continuing.  However, a short-term pull-back inside the bands is likely.",
+WriteIf( trend > 30 AND trend < 70, "Although prices have broken the lower band and a downside breakout is possible, the most likely scenario for "+tname+" is to continue within current trading range.", "" ) ), "" ) +
+
+WriteIf( C > btop, "above the upper band by " +
+WriteVal( 100 *( C- btop )/ width, 1.1 ) + "%%. " +
+WriteIf( trend > 70, " This combined with the steep uptrend suggests that the upward trend in prices has a good chance of continuing.  However, a short-term pull-back inside the bands is likely.",
+WriteIf( trend > 30 AND trend < 70, "Although prices have broken the upper band and a upside breakout is possible, the most likely scenario for "+tname+" is to continue within current trading range.", "" ) ), "" ) +
+
+WriteIf( C < btop AND ( ( btop - C ) / width ) < 0.5, 
+"below upper band by " +
+WriteVal( 100 *( btop - C )/ width, 1.1 ) + "%%. ", 
+WriteIf( C < btop AND C > bbot , "above bottom band by " +
+WriteVal( 100 *( C - bbot )/ width, 1.1 ) + "%%. ", "" ) ));
+
+printf("\n"+
+WriteIf( ( trend > 30 AND trend < 70 AND ( C > btop OR C < bbot ) ) AND abs(relwidth) > 40,
+		 "This picture becomes somewhat unclear due to the fact that Bollinger Bands are  currently",
+		 "Bollinger Bands are " )+	  
+WriteVal( abs( relwidth ), 1.1 ) + "%% " +
+WriteIf( relwidth > 0, "wider" , "narrower" ) +
+" than normal.");
+
+printf("\n");
+
+printf(
+WriteIf( abs( relwidth ) < 40, "The current width of the bands (alone) does not suggest anything conclusive about the future volatility or movement of prices.","")+
+WriteIf( relwidth < -40, "The narrow width of the bands suggests low volatility as compared to " + tname + "'s normal range.  Therefore, the probability of volatility increasing with a sharp price move has increased for the near-term. "+
+"The bands have been in this narrow range for " + WriteVal(BarsSince(Cross(-40,relwidth)),1.0) + " bars. The probability of a significant price move increases the longer the bands remain in this narrow range." ,"")+
+WriteIf( relwidth > 40, "The large width of the bands suggest high volatility as compared to " + tname + "'s normal range.  Therefore, the probability of volatility decreasing and prices entering (or remaining in) a trading range has increased for the near-term. "+
+"The bands have been in this wide range for  " + WriteVal(BarsSince(Cross(relwidth,40)),1.0) + " bars.The probability of prices consolidating into a less volatile trading range increases the longer the bands remain in this wide range." ,""));
+
+printf("\n\nThis commentary is not a recommendation to buy or sell. Use at your own risk.");
+}
+_SECTION_END();

@@ -1,0 +1,45 @@
+_SECTION_BEGIN("Relative Performance");
+_N( TickerList = ParamStr("Tickers", "^DJI,MSFT,GE") );
+NumBars = 20;
+fvb = Status("firstvisiblebar");
+Plot( 100 * ( C - C[ fvb ] ) / C[ fvb ], Name(), colorBlue );
+for( i = 0; ( symbol = StrExtract( TickerList, i ) ) != ""; i++ )
+{
+ fc = Foreign( symbol, "C" );
+
+ if( ! IsNull( fc[ 0 ] ) )
+ {
+   Plot( 100 * ( fc - fc[ fvb ] )/ fc[ fvb ], symbol, colorLightOrange + ( (2*i) % 15 ), styleLine );
+ }
+}
+PlotGrid( 0, colorYellow );
+_N( Title = "{{NAME}} - Relative Performance [%]: {{VALUES}}" );
+
+if( Status("action") == actionCommentary )
+{
+	Change = SelectedValue( ROC( C, NumBars ) );
+	printf( "Over last %g bars ", NumBars );
+	printf( Name() + " has moved %.2g%%\n", Change );
+
+	printf("\nIn the same time\n");
+	for( i = 0; ( symbol = StrExtract( TickerList, i ) ) != ""; i++ )
+	{
+	 fc = Foreign( symbol, "C" );
+ 
+	 if( ! IsNull( fc[ 0 ] ) )
+	 {
+		fChange = SelectedValue( ROC( fc, NumBars ) );
+ 		printf( symbol + " performance was %.2g%%", fChange, fChange - Change );
+		if( fChange - Change > 0 )
+   		{ 
+      		printf( " better " );
+		}
+		else 
+		{
+			printf( " worse " ); 
+   		}
+   		printf( "than " + Name() + "\n");
+ 	 }
+	}
+}
+_SECTION_END();

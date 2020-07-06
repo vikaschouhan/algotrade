@@ -1,0 +1,13 @@
+_SECTION_BEGIN("Price");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+Plot( C, "Close", ParamColor("Color", colorDefault ), styleNoTitle | ParamStyle("Style") | GetPriceStyle() ); 
+_SECTION_END();
+
+_SECTION_BEGIN("VAP");
+segments = IIf( Interval() < inDaily, Day(), Month() );
+segments = segments != Ref( segments , -1 );
+
+PlotVAPOverlayA( segments , Param("Lines", 300, 100, 1000, 1 ), Param("Width", 80, 1, 100, 1 ), ParamColor("Color", colorGold ), ParamToggle("Side", "Left|Right" ) | 2 * ParamToggle("Style", "Fill|Lines", 0) | 4*ParamToggle("Z-order", "On top|Behind", 1 ) );
+Plot(segments, "", colorLightGrey, styleHistogram | styleOwnScale );
+_SECTION_END();

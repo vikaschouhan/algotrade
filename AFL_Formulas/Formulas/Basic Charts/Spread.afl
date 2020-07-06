@@ -1,0 +1,19 @@
+_N( Symbol2= ParamStr("Symbol2", "MSFT") );
+Mode = ParamToggle("Mode", "Difference (Symbol1-Symbol2)|Ratio (Symbol1/Symbol2)");
+
+SetForeign( Symbol2 );
+C2 = C;
+H2 = H;
+L2 = L;
+O2 = O;
+V2 = V;
+RestorePriceArrays();
+
+Color = ParamColor( "Color", colorDefault );
+Style = ParamStyle( "Style", styleLine, maskPrice );
+
+if( Mode == 0 )
+ PlotOHLC( O-O2, H-H2, L-L2, C-C2, "(" + Name()+" - "+Symbol2 + ") spread", Color, style );
+else
+ PlotOHLC( O/O2, H/H2, L/L2, C/C2, "(" + Name()+" / "+Symbol2 + ") spread", Color, style );
+
