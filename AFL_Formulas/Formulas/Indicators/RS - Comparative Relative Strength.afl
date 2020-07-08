@@ -1,2 +1,0 @@
-base = ParamStr("RS base ticker", GetBaseIndex() );
-Plot( RelStrength(base), _SECTION_NAME() + "(" + base + ")", ParamColor( "color", colorCycle ), ParamStyle("Style")  );

@@ -1,6 +1,0 @@
-function AbsoluteBreadthIndex()
-{
-  return AdvIssues() - DecIssues();
-}
-
-Plot( AbsoluteBreadthIndex(), _DEFAULT_NAME(), ParamColor("Color", ColorCycle ) );

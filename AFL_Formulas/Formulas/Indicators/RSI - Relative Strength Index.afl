@@ -1,3 +1,0 @@
-SetChartOptions(0,0,chartGrid30|chartGrid70);
-periods = Param( "Periods", 15, 1, 200, 1 );
-Plot( RSI( periods), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style")  );

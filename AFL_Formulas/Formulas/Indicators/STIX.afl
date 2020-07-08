@@ -1,8 +1,0 @@
-function STIX()
-{
-  ADRatio = 100 * AdvIssues()/( AdvIssues() + DecIssues() );
-
-  return EMA( ADRatio, 21 );
-}
-
-Plot( STIX(), _DEFAULT_NAME(), ParamColor("Color", ColorCycle ) );

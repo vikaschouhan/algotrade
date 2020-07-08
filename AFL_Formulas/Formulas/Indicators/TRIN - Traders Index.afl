@@ -1,1 +1,0 @@
-Plot( Trin(), _DEFAULT_NAME(), ParamColor("color", colorCycle ), ParamStyle("Style") );
