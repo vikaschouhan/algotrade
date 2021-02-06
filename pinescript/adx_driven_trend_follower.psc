@@ -1,5 +1,5 @@
 //@version=4
-strategy("ATR driven trend follower", overlay=false)
+strategy("ATX driven trend follower", overlay=false)
 
 ////////////////////////////////////////////
 // INPUT Vars
@@ -100,6 +100,6 @@ strategy.close("S", when=cover)
 
 /////////////////////////////////////////
 /// Plot primary signals
-plot(ADX_tf,   linewidth=1, color=color.black,  title="ATR")
-plot(ADX_hi,   linewidth=1, color=color.green,  title="ATR_Hi")
-plot(ADX_lo,   linewidth=1, color=color.red,    title="ATR_Lo")
+plot(ADX_tf,   linewidth=1, color=color.black,  title="ADX")
+plot(ADX_hi,   linewidth=1, color=color.green,  title="ADX_Hi")
+plot(ADX_lo,   linewidth=1, color=color.red,    title="ADX_Lo")
