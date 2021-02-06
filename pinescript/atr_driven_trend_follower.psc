@@ -79,8 +79,8 @@ if use_tstop
 /// Calculate position signals
 buy_sig_m      = ADX_hi == ADX_tf and ADX_hi[1] > ADX_tf[1] and trend_pos
 short_sig_m    = ADX_lo == ADX_tf and ADX_lo[1] < ADX_tf[1] and trend_neg
-sell_sig_m     = ADX_hi < ADX_tf
-cover_sig_m    = ADX_lo > ADX_tf
+sell_sig_m     = ADX_hi > ADX_tf
+cover_sig_m    = ADX_lo < ADX_tf
 if use_stops
     sell_sig_m   := crossunder(close, stop_l[1])
     cover_sig_m  := crossover(close, stop_s[1])
