@@ -30,6 +30,7 @@ cover     = crossover(close, donch_stop_hi[1])
 
 ////////////////////////////////////////////////////////////////
 // Execute positions
+// NOTE: Stop losses don't really work here. The logic is faulty !!
 strategy.entry("long", strategy.long, when=buy)
 strategy.close("long", when=sell)
 strategy.entry("short", strategy.short, when=short)
