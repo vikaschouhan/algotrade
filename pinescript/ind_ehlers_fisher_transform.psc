@@ -6,6 +6,7 @@ study(title="Fisher Transform MTR", overlay=false)
 fish_len    = input(defval=10,     title='Channel Length', type=input.integer)
 param1      = input(defval=0.33,   title='Param 1', type=input.float, maxval=1.0, minval=0.0, step=0.01)
 param2      = input(defval=0.5,    title='Param 2', type=input.float, maxval=1.0, minval=0.0, step=0.01)
+fish_lag    = input(defval=1,      title='Fisher Lag signal length', type=input.integer)
 time_frame  = input(defval='1D',   title='Time Frame', type=input.resolution)
 
 //////////////////////////////////////////////////////////////////
@@ -27,4 +28,4 @@ fish = security(syminfo.tickerid, time_frame, fisher_transform(fish_len, param1,
 /////////////////////////////////////////////////////////////////
 // Plots
 plot(fish,           color=color.green, title="Fisher")
-plot(nz(fish[1]),    color=color.red,   title="Trigger")
+plot(nz(fish[fish_lag]),    color=color.red,   title="Trigger")
