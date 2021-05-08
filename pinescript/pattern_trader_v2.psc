@@ -1,9 +1,10 @@
 //@version=4
 strategy("Pattern trader v2", overlay=true)
 
-inp_sl            = input(defval=70,      type=input.float, title="Stop Loss")
-inp_tp            = input(defval=1000,    type=input.float, title="Take Profit")
-inp_trail         = input(defval=5,       type=input.float, title="Trailing Stop")
+inp_sl            = input(defval=0.7,     type=input.float, title="Stop Loss (x100)", step=0.1) * 100
+inp_tp            = input(defval=10.0,    type=input.float, title="Take Profit (x100)", step=0.1) * 100
+inp_trail         = input(defval=0.5,     type=input.float, title="Trailing Stop (x100)", step=0.1) * 100
+time_frame        = input(defval='',      type=input.resolution, title="Pattern TimeFrame")
 
 /////////////////////////////////////////////////////////////////////////
 // Targets
@@ -73,12 +74,15 @@ get_pattern(pattern) =>
 [bullish_kicking, bearish_kicking]           = get_pattern('kicking')
 [ladder_bottom, _]                           = get_pattern('ladder_bottom')
 
-signal_long = bullish_engulfing or bullish_harami or piercing_line or morning_star or bullish_belt_hold or three_winter_soldiers or stick_sandwich or bullish_meeting_line or bullish_ml or bullish_kicking
-signal_short = bearish_engulfing or bearish_harami or dark_cloud_cover or evening_star or bearish_belt_hold or three_black_crows or bearish_meeting_line or bearish_ml or bearish_kicking
+signal_long_t = bullish_engulfing or bullish_harami or piercing_line or morning_star or bullish_belt_hold or three_winter_soldiers or stick_sandwich or bullish_meeting_line or bullish_ml or bullish_kicking
+signal_short_t = bearish_engulfing or bearish_harami or dark_cloud_cover or evening_star or bearish_belt_hold or three_black_crows or bearish_meeting_line or bearish_ml or bearish_kicking
+
+signal_long = security(syminfo.tickerid, time_frame, signal_long_t)
+signal_short = security(syminfo.tickerid, time_frame, signal_short_t)
 
 /////////////////////////////////////////////////////////////////
-// Execute positions
-strategy.entry("L", true, when=signal_long)
-strategy.entry("S", false, when=signal_short)
+// Execute positionsteg
+strategy.entry("L", strategy.long, when=signal_long)
+strategy.entry("S", strategy.short, when=signal_short)
 strategy.exit("LExit", from_entry="L", profit=tp, trail_points=trail, loss=sl)
 strategy.exit("SExit", from_entry="S", profit=tp, trail_points=trail, loss=sl)
