@@ -24,6 +24,8 @@ bb_source      = input(defval=close,    type=input.source,  title='Bollinger Sou
 bb_length      = input(defval=20,       type=input.integer, title='Bollinger Length', minval=1)
 bb_mult        = input(defval=2.0,      type=input.float,   title='Bollinger Multiplier', minval=0.01, maxval=50, step=0.01)
 bb_tf          = input(defval='',       type=input.resolution, title='Bollinger Timeframe')
+// Bollinger bands strategy
+bb_strategy    = input(defval='default', type=input.string, options=['default', 'strat_1'])
 
 ///////////////////////////////////////////////////////////////////////
 // Helper functions
@@ -65,6 +67,18 @@ bb_basis_t = security(syminfo.tickerid, bb_tf, bb_basis)
 bb_upper_t = security(syminfo.tickerid, bb_tf, bb_upper)
 bb_lower_t = security(syminfo.tickerid, bb_tf, bb_lower)
 
+// Trendless position signals
+trendless_buy     = crossunder(close, bb_lower_t)
+trendless_sell    = crossover(close, bb_upper_t)
+trendless_short   = crossover(close, bb_upper_t)
+trendless_cover   = crossunder(close, bb_lower_t)
+
+if bb_strategy == 'strat_1'
+    trendless_buy     := crossover(close, bb_lower_t)
+    trendless_sell    := crossunder(close, bb_upper_t)
+    trendless_short   := crossunder(close, bb_upper_t)
+    trendless_cover   := crossover(close, bb_lower_t)
+//
 /////////////////////////////////////////////////////////////////////////
 // Trend indicator (Pivots based)
 time_frame = time_frame_m
@@ -113,10 +127,10 @@ buy    := buy and (close >= r_level)
 short  := short and (close <= s_level)
 
 if trendless
-    buy     := crossunder(close, bb_lower_t)
-    sell    := crossover(close, bb_upper_t)
-    short   := crossover(close, bb_upper_t)
-    cover   := crossunder(close, bb_lower_t)
+    buy     := trendless_buy
+    sell    := trendless_sell
+    short   := trendless_short
+    cover   := trendless_cover
 //
 
 //////////////////////////////////////////////////////////////////////
