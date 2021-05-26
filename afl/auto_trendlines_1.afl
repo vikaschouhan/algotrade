@@ -1,118 +1,115 @@
-
-
-//www.aflcode.com
-
-
+// AutoTrend v1
 SetBarsRequired(sbrAll,sbrAll);
-xx = Cum(1);
-nbar = Param("nbar",5,2,50,1); 
+xx               = Cum(1);
+nbar             = Param("nbar",5,2,50,1);
+tld              = ParamToggle("All trendlines","show|hide",1);
+chartflag        = ParamToggle("Heikin Ashi","show|hide",1);
 
 // define fractals
-PHigh = H > Ref(HHV(H,nbar),-1) AND Ref(HHV(H,nbar),nbar) <= H;
-PHighPrice = ValueWhen(PHigh,H);
-PLow = L < Ref(LLV(L,nbar),-1) AND Ref(LLV(L,nbar),nbar) >= L;
-PLowPrice = ValueWhen(PLow,L); 
+PHigh            = H > Ref(HHV(H,nbar),-1) AND Ref(HHV(H,nbar),nbar) <= H;
+PHighPrice       = ValueWhen(PHigh,H);
+PLow             = L < Ref(LLV(L,nbar),-1) AND Ref(LLV(L,nbar),nbar) >= L;
+PLowPrice        = ValueWhen(PLow,L); 
 
 // lower trendline, segment 1: between fractal points
-startval_L = ValueWhen(PLow,L,1); 
-endval_L = ValueWhen(PLow,L,0); 
-startbar_L = ValueWhen(PLow,xx,1); 
-endbar_L = ValueWhen(PLow,xx,0); 
-aa_L = (endval_L-startval_L)/(endbar_L-startbar_L);
-bb_L = startval_L;
-trendline_L = aa_L * (xx - startbar_L) + bb_L;
+startval_L       = ValueWhen(PLow,L,1); 
+endval_L         = ValueWhen(PLow,L,0); 
+startbar_L       = ValueWhen(PLow,xx,1); 
+endbar_L         = ValueWhen(PLow,xx,0); 
+aa_L             = (endval_L-startval_L)/(endbar_L-startbar_L);
+bb_L             = startval_L;
+trendline_L      = aa_L * (xx - startbar_L) + bb_L;
 // slope calculations for display purpose only
-dtrendline_L = trendline_L - Ref(trendline_L,-1);
+dtrendline_L     = trendline_L - Ref(trendline_L,-1);
 
 // lower extended trendline, segment 2: extend segment 1 to next fractals pivot 
-startval_L_extend = ValueWhen(PLow,L,2); 
-endval_L_extend = ValueWhen(PLow,L,1); 
-startbar_L_extend = ValueWhen(PLow,xx,2); 
-endbar_L_extend = ValueWhen(PLow,xx,1); 
-aa_L_extend = (endval_L_extend-startval_L_extend)/(endbar_L_extend-startbar_L_extend);
-bb_L_extend = startval_L;
-trendline_L_extend = aa_L_extend * (xx - startbar_L) + endval_L_extend; 
+startval_L_extend     = ValueWhen(PLow,L,2); 
+endval_L_extend       = ValueWhen(PLow,L,1); 
+startbar_L_extend     = ValueWhen(PLow,xx,2); 
+endbar_L_extend       = ValueWhen(PLow,xx,1); 
+aa_L_extend           = (endval_L_extend-startval_L_extend)/(endbar_L_extend-startbar_L_extend);
+bb_L_extend           = startval_L;
+trendline_L_extend    = aa_L_extend * (xx - startbar_L) + endval_L_extend; 
 // slope calculations for display purpose only
-dtrendline_L_extend = trendline_L_extend - Ref(trendline_L_extend,-1);
-dtrendline_L_extend = IIf(PLow,Ref(dtrendline_L,-1),dtrendline_L_extend);
+dtrendline_L_extend   = trendline_L_extend - Ref(trendline_L_extend,-1);
+dtrendline_L_extend   = IIf(PLow,Ref(dtrendline_L,-1),dtrendline_L_extend);
 
 // lower extended trendline, segment 3: extend segment 2 nbars past the fractal pivot
-startval_L_extend2 = ValueWhen(PLow,L,3); 
-endval_L_extend2 = ValueWhen(PLow,L,2); 
-startbar_L_extend2 = ValueWhen(PLow,xx,3); 
-endbar_L_extend2 = ValueWhen(PLow,xx,2); 
-aa_L_extend2 = (endval_L_extend2-startval_L_extend2)/(endbar_L_extend2-startbar_L_extend2);
-bb_L_extend2 = endval_L_extend2;
-trendline_L_extend2 = aa_L_extend2 * (xx - endbar_L_extend2) + endval_L_extend2; 
+startval_L_extend2    = ValueWhen(PLow,L,3); 
+endval_L_extend2      = ValueWhen(PLow,L,2); 
+startbar_L_extend2    = ValueWhen(PLow,xx,3); 
+endbar_L_extend2      = ValueWhen(PLow,xx,2); 
+aa_L_extend2          = (endval_L_extend2-startval_L_extend2)/(endbar_L_extend2-startbar_L_extend2);
+bb_L_extend2          = endval_L_extend2;
+trendline_L_extend2   = aa_L_extend2 * (xx - endbar_L_extend2) + endval_L_extend2; 
 // slope calculations for display purpose only
-dtrendline_L_extend2 = trendline_L_extend2 - Ref(trendline_L_extend2,-1);
-dtrendline_L_extend2 = IIf(PLow,Ref(dtrendline_L_extend,-1),dtrendline_L_extend2);
+dtrendline_L_extend2  = trendline_L_extend2 - Ref(trendline_L_extend2,-1);
+dtrendline_L_extend2  = IIf(PLow,Ref(dtrendline_L_extend,-1),dtrendline_L_extend2);
 
 // upper trendline, segment 1: between fractal points
-startval_H = ValueWhen(PHigh,H,1); 
-endval_H = ValueWhen(PHigh,H,0); 
-startbar_H = ValueWhen(PHigh,xx,1); 
-endbar_H = ValueWhen(PHigh,xx,0); 
-aa_H = (endval_H-startval_H)/(endbar_H-startbar_H);
-bb_H = startval_H;
-trendline_H = aa_H * (xx - startbar_H) + bb_H; 
+startval_H            = ValueWhen(PHigh,H,1); 
+endval_H              = ValueWhen(PHigh,H,0); 
+startbar_H            = ValueWhen(PHigh,xx,1); 
+endbar_H              = ValueWhen(PHigh,xx,0); 
+aa_H                  = (endval_H-startval_H)/(endbar_H-startbar_H);
+bb_H                  = startval_H;
+trendline_H           = aa_H * (xx - startbar_H) + bb_H; 
 // slope calculations for display purpose only
-dtrendline_H = trendline_H - Ref(trendline_H,-1);
+dtrendline_H          = trendline_H - Ref(trendline_H,-1);
 
 // upper extended trendline, segment 2: extend segment 1 to next fractals pivot 
-startval_H_extend = ValueWhen(PHigh,H,2); 
-endval_H_extend = ValueWhen(PHigh,H,1); 
-startbar_H_extend = ValueWhen(PHigh,xx,2); 
-endbar_H_extend = ValueWhen(PHigh,xx,1); 
-aa_H_extend = (endval_H_extend-startval_H_extend)/(endbar_H_extend-startbar_H_extend);
-bb_H_extend = startval_H;
-trendline_H_extend = aa_H_extend * (xx - startbar_H) + endval_H_extend; 
+startval_H_extend     = ValueWhen(PHigh,H,2); 
+endval_H_extend       = ValueWhen(PHigh,H,1); 
+startbar_H_extend     = ValueWhen(PHigh,xx,2); 
+endbar_H_extend       = ValueWhen(PHigh,xx,1); 
+aa_H_extend           = (endval_H_extend-startval_H_extend)/(endbar_H_extend-startbar_H_extend);
+bb_H_extend           = startval_H;
+trendline_H_extend    = aa_H_extend * (xx - startbar_H) + endval_H_extend; 
 // slope calculations for display purpose only
-dtrendline_H_extend = trendline_H_extend - Ref(trendline_H_extend,-1);
-dtrendline_H_extend = IIf(PHigh,Ref(dtrendline_H,-1),dtrendline_H_extend);
+dtrendline_H_extend   = trendline_H_extend - Ref(trendline_H_extend,-1);
+dtrendline_H_extend   = IIf(PHigh,Ref(dtrendline_H,-1),dtrendline_H_extend);
 
 // upper extended trendline, segment 3: extend segment 2 nbars past the fractal pivot
-startval_H_extend2 = ValueWhen(PHigh,H,3); 
-endval_H_extend2 = ValueWhen(PHigh,H,2); 
-startbar_H_extend2 = ValueWhen(PHigh,xx,3); 
-endbar_H_extend2 = ValueWhen(PHigh,xx,2); 
-aa_H_extend2 = (endval_H_extend2-startval_H_extend2)/(endbar_H_extend2-startbar_H_extend2);
-bb_H_extend2 = endval_H_extend2;
-trendline_H_extend2 = aa_H_extend2 * (xx - endbar_H_extend2) + endval_H_extend2; 
+startval_H_extend2    = ValueWhen(PHigh,H,3); 
+endval_H_extend2      = ValueWhen(PHigh,H,2); 
+startbar_H_extend2    = ValueWhen(PHigh,xx,3); 
+endbar_H_extend2      = ValueWhen(PHigh,xx,2); 
+aa_H_extend2          = (endval_H_extend2-startval_H_extend2)/(endbar_H_extend2-startbar_H_extend2);
+bb_H_extend2          = endval_H_extend2;
+trendline_H_extend2   = aa_H_extend2 * (xx - endbar_H_extend2) + endval_H_extend2; 
 // slope calculations for display purpose only
-dtrendline_H_extend2 = trendline_H_extend2 - Ref(trendline_H_extend2,-1);
-dtrendline_H_extend2 = IIf(PHigh,Ref(dtrendline_H_extend,-1),dtrendline_H_extend2);
+dtrendline_H_extend2  = trendline_H_extend2 - Ref(trendline_H_extend2,-1);
+dtrendline_H_extend2  = IIf(PHigh,Ref(dtrendline_H_extend,-1),dtrendline_H_extend2);
 
-tld = ParamToggle("All trendlines","show|hide",1);
 if (tld)
 {
- // omit uptrending upper trendlines and downtrending lower trendlines
- trendline_L = IIf(dtrendline_L > 0,trendline_L,Null);
- trendline_L_extend = IIf(dtrendline_L_extend > 0,trendline_L_extend,Null);
- trendline_L_extend2 = IIf(dtrendline_L_extend2 > 0,trendline_L_extend2,Null);
- trendline_H = IIf(dtrendline_H < 0,trendline_H,Null);
- trendline_H_extend = IIf(dtrendline_H_extend < 0,trendline_H_extend,Null);
- trendline_H_extend2 = IIf(dtrendline_H_extend2 < 0,trendline_H_extend2,Null);
+    // omit uptrending upper trendlines and downtrending lower trendlines
+    trendline_L         = IIf(dtrendline_L > 0,trendline_L,Null);
+    trendline_L_extend  = IIf(dtrendline_L_extend > 0,trendline_L_extend,Null);
+    trendline_L_extend2 = IIf(dtrendline_L_extend2 > 0,trendline_L_extend2,Null);
+    trendline_H         = IIf(dtrendline_H < 0,trendline_H,Null);
+    trendline_H_extend  = IIf(dtrendline_H_extend < 0,trendline_H_extend,Null);
+    trendline_H_extend2 = IIf(dtrendline_H_extend2 < 0,trendline_H_extend2,Null);
 }
 
 trendline_L_extend2 = IIf(BarsSince(Plow) <= nbar,trendline_L_extend2,Null);
 trendline_H_extend2 = IIf(BarsSince(PHigh) <= nbar,trendline_H_extend2,Null);
 
 // chart
-GraphXSpace = 5;
+GraphXSpace         = 5;
 SetChartOptions(0, chartShowDates);
-chartflag = ParamToggle("Heikin Ashi","show|hide",1);
+
 if (chartFlag)
 {
- Plot( C, "\nPrice",colorWhite, styleCandle );
+    Plot( C, "\nPrice",colorWhite, styleCandle );
 } 
 else
 {
- HaClose = (O+H+L+C)/4; 
- HaOpen = AMA( Ref( HaClose, -1 ), 0.5 ); 
- HaHigh = Max( H, Max( HaClose, HaOpen ) ); 
- HaLow = Min( L, Min( HaClose, HaOpen ) ); 
- PlotOHLC( HaOpen, HaHigh, HaLow, HaClose, "Modified " + Name(), colorWhite, styleCandle ); 
+    HaClose   = (O+H+L+C)/4; 
+    HaOpen    = AMA( Ref( HaClose, -1 ), 0.5 ); 
+    HaHigh    = Max( H, Max( HaClose, HaOpen ) ); 
+    HaLow     = Min( L, Min( HaClose, HaOpen ) ); 
+    PlotOHLC( HaOpen, HaHigh, HaLow, HaClose, "Modified " + Name(), colorWhite, styleCandle ); 
 }
 
 PlotShapes(shapeSmallCircle*PLow,colorGreen,0,L,-10);
@@ -120,17 +117,17 @@ PlotShapes(shapeSmallCircle*PHigh,colorRed,0,H,10);
 // segment 1
 Plot(trendline_L, "\nLower Trendline", colorBrightGreen,styleLine);
 // segment 2, grey dots unconfirmed trend, green confirmed trend
-Plot(IIf(BarsSince(Plow) <= nbar,trendline_L_extend,Null), "", colorLightGrey,styleNoLine | styleDots | styleThick);
-Plot(IIf(BarsSince(Plow) > nbar,trendline_L_extend,Null), "",colorDarkGreen, styleNoLine | styleDots | styleThick);
+Plot(IIf(BarsSince(Plow) <= nbar,trendline_L_extend,Null), "L1", colorLightGrey,styleNoLine | styleDots | styleThick);
+Plot(IIf(BarsSince(Plow) > nbar,trendline_L_extend,Null), "L2",colorDarkGreen, styleNoLine | styleDots | styleThick);
 // segment 3
-Plot(IIf(BarsSince(Plow) <= nbar,trendline_L_extend2,Null), "",colorDarkGreen,styleNoLine | styleDots| styleThick);
+Plot(IIf(BarsSince(Plow) <= nbar,trendline_L_extend2,Null), "L3",colorDarkGreen,styleNoLine | styleDots| styleThick);
 // segment 1
 Plot(trendline_H, "\nUpper Trendline", colorRed,styleLine);
 // segment 2, grey dots unconfirmed trend, green confirmed trend
-Plot(IIf(BarsSince(PHigh) <= nbar,trendline_H_extend,Null), "", colorLightGrey, styleNoLine | styleDots | styleThick);
-Plot(IIf(BarsSince(PHigh) > nbar,trendline_H_extend,Null), "",colorOrange, styleNoLine | styleDots | styleThick);
+Plot(IIf(BarsSince(PHigh) <= nbar,trendline_H_extend,Null), "H1", colorLightGrey, styleNoLine | styleDots | styleThick);
+Plot(IIf(BarsSince(PHigh) > nbar,trendline_H_extend,Null), "H2",colorOrange, styleNoLine | styleDots | styleThick);
 // segment 3
-Plot(IIf(BarsSince(PHigh) <= nbar,trendline_H_extend2,Null), "",colorOrange, styleNoLine | styleDots | styleThick);
+Plot(IIf(BarsSince(PHigh) <= nbar,trendline_H_extend2,Null), "H3",colorOrange, styleNoLine | styleDots | styleThick);
 
 Title = Name() + 
 " | " + EncodeColor( colorYellow ) + "nbar: " + nbar + EncodeColor( colorWhite ) +
@@ -140,25 +137,23 @@ Title = Name() +
 signalFlag = ParamToggle("Possible Signals","show|hide",1);
 if (signalFlag)
 {
-// ***** possible buy and short signal *****
-Buy = (!IsEmpty(trendline_H_extend) AND Cross(C,trendline_H_extend) AND BarsSince(PHigh) > nbar) OR 
-(!IsEmpty(trendline_H_extend2) AND Cross(C,trendline_H_extend2) AND !PHigh) OR
-(PHigh AND C > trendline_H_extend2 AND Ref(C,-1) < Ref(trendline_H_extend,-1) AND !IsEmpty(trendline_H_extend) AND !IsEmpty(trendline_H_extend2) );
-BuyPrice = C;
-Short = (!IsEmpty(trendline_L_extend) AND Cross(trendline_L_extend,C)  AND BarsSince(PLow) > nbar)  OR 
-(!IsEmpty(trendline_L_extend2) AND Cross(trendline_L_extend2,C) AND !PLow) OR
-(PLow AND C < trendline_L_extend2 AND Ref(C,-1) > Ref(trendline_L_extend,-1) AND !IsEmpty(trendline_L_extend) AND !IsEmpty(trendline_L_extend2)); 
-ShortPrice = C;
-Sell = 0;
-Cover = 0;
+    // ***** possible buy and short signal *****
+    Buy = (!IsEmpty(trendline_H_extend) AND Cross(C,trendline_H_extend) AND BarsSince(PHigh) > nbar) OR 
+          (!IsEmpty(trendline_H_extend2) AND Cross(C,trendline_H_extend2) AND !PHigh) OR
+          (PHigh AND C > trendline_H_extend2 AND Ref(C,-1) < Ref(trendline_H_extend,-1) AND !IsEmpty(trendline_H_extend) AND !IsEmpty(trendline_H_extend2) );
+    BuyPrice = C;
+    Short = (!IsEmpty(trendline_L_extend) AND Cross(trendline_L_extend,C)  AND BarsSince(PLow) > nbar)  OR 
+            (!IsEmpty(trendline_L_extend2) AND Cross(trendline_L_extend2,C) AND !PLow) OR
+            (PLow AND C < trendline_L_extend2 AND Ref(C,-1) > Ref(trendline_L_extend,-1) AND !IsEmpty(trendline_L_extend) AND !IsEmpty(trendline_L_extend2)); 
+    ShortPrice = C;
+    Sell = 0;
+    Cover = 0;
 
-PlotShapes(IIf(Buy,shapeUpArrow,shapeNone),colorGreen,0,L,-15);
-PlotShapes(IIf(Buy,shapeHollowUpArrow,shapeNone),colorWhite,0,L,-15);
-PlotShapes(IIf(Buy,shapeHollowSmallCircle,shapeNone),colorWhite,0,BuyPrice,0);
+    PlotShapes(IIf(Buy,shapeUpArrow,shapeNone),colorGreen,0,L,-15);
+    PlotShapes(IIf(Buy,shapeHollowUpArrow,shapeNone),colorWhite,0,L,-15);
+    PlotShapes(IIf(Buy,shapeHollowSmallCircle,shapeNone),colorWhite,0,BuyPrice,0);
 
-PlotShapes(IIf(Short,shapeDownTriangle,shapeNone),colorYellow,0,H,IIf(Short AND Sell,-30,-15));
-PlotShapes(IIf(Short,shapeHollowDownTriangle,shapeNone),colorWhite,0,H,IIf(Short AND Sell,-30,-15));
-PlotShapes(IIf(Short,shapeHollowCircle,shapeNone),colorWhite,0,ShortPrice,0);
+    PlotShapes(IIf(Short,shapeDownTriangle,shapeNone),colorYellow,0,H,IIf(Short AND Sell,-30,-15));
+    PlotShapes(IIf(Short,shapeHollowDownTriangle,shapeNone),colorWhite,0,H,IIf(Short AND Sell,-30,-15));
+    PlotShapes(IIf(Short,shapeHollowCircle,shapeNone),colorWhite,0,ShortPrice,0);
 }
-
-
