@@ -1,35 +1,68 @@
 // AutoTrend v1
 SetBarsRequired(sbrAll,sbrAll);
 nbar             = Param("nbar", 2, 2, 50, 1);
+nbarExt          = Param("extra_bars", 1, 1, 10, 1);
+showShortSignals = ParamToggle( "show_short_signals", "No|Yes", 0 );
 
-// Keep Track of bars
-BarNo            = Cum(1);
+function GetFractals(nbar_t)
+{
+    // Define conditions
+    PHigh            = H > Ref(HHV(H, nbar_t), -1) AND Ref(HHV(H, nbar_t), nbar_t) <= H;
+    PLow             = L < Ref(LLV(L, nbar_t), -1) AND Ref(LLV(L, nbar_t), nbar_t) >= L;
 
-// Define conditions
-PHigh            = H > Ref(HHV(H, nbar), -1) AND Ref(HHV(H, nbar), nbar) <= H;
-PLow             = L < Ref(LLV(L, nbar), -1) AND Ref(LLV(L, nbar), nbar) >= L;
+    // High Fractals (Take last 4)
+    PHighPrice1      = ValueWhen(PHigh, H, 1);
+    PHighPrice2      = ValueWhen(PHigh, H, 2);
+    PHighPrice3      = ValueWhen(PHigh, H, 3);
+    PHighPrice4      = ValueWhen(PHigh, H, 4);
 
-// High Fractals (Take last 4)
-PHighPrice0      = ValueWhen(PHigh, H, 0);
-PHighPrice1      = ValueWhen(PHigh, H, 1);
-PHighPrice2      = ValueWhen(PHigh, H, 2);
-PHighPrice3      = ValueWhen(PHigh, H, 3);
+    // Low Fractals (Take last 4)
+    PLowPrice1       = ValueWhen(PLow, L, 1);
+    PLowPrice2       = ValueWhen(PLow, L, 2);
+    PLowPrice3       = ValueWhen(PLow, L, 3);
+    PLowPrice4       = ValueWhen(PLow, L, 4);
 
-// Low Fractals (Take last 4)
-PLowPrice0       = ValueWhen(PLow, L, 0);
-PLowPrice1       = ValueWhen(PLow, L, 1);
-PLowPrice2       = ValueWhen(PLow, L, 2);
-PLowPrice3       = ValueWhen(PLow, L, 3);
+    // Conditions
+    BuyCond          = PHighPrice1 >= PHighPrice2 AND PHighPrice2 <= PHighPrice3 AND PHighPrice3 <= PHighPrice4;
+    ShortCond        = PLowPrice1 <= PLowPrice2 AND PLowPrice2 >= PLowPrice3 AND PLowPrice3 >= PLowPrice4;
+    
+    VarSet("PHighPrice1", PHighPrice1);
+    VarSet("PHighPrice2", PHighPrice2);
+    VarSet("PHighPrice3", PHighPrice3);
+    VarSet("PHighPrice4", PHighPrice4);
+    
+    VarSet("PLowPrice1", PLowPrice1);
+    VarSet("PLowPrice2", PLowPrice2);
+    VarSet("PLowPrice3", PLowPrice3);
+    VarSet("PLotPrice4", PLowPrice4);
+    
+    VarSet("BuyCond", BuyCond);
+    VarSet("ShortCond", ShortCond);
+}
 
-// Conditions
-BuyCond1         = PHighPrice1 <= PHighPrice2 AND PHighPrice2 <= PHighPrice3;
-ShortCond1       = PLowPrice1 >= PLowPrice2 AND PLowPrice2 >= PLowPrice3;
-BuyCond0         = PHighPrice0 <= PHighPrice1 AND PHighPrice1 <= PHighPrice2;
-ShortCond0       = PLowPrice0 >= PLowPrice1 AND PLowPrice1 >= PLowPrice2;
+BuyPrimary       = False;
+ShortPrimary     = False;
+nbarLow          = IIf((nbar - nbarExt) < 1, 1, (nbar - nbarExt));
+nbarHigh         = (nbar + nbarExt);
 
 // Execution signals
-Buy              = (Cross(Close, PHighPrice1) AND BuyCond1);
-Short            = (Cross(PLowPrice1, Close) AND ShortCond1);
+for (i= nbarLow; i <= nbarHigh; i++)
+{
+    GetFractals(i);
+    BuyCond          = VarGet("BuyCond");
+    ShortCond        = VarGet("ShortCond");
+    PHighPrice1      = VarGet("PHighPrice1");
+    PLowPrice1       = VarGet("PLowPrice1");
+    BuyPrimary       = BuyPrimary OR (Cross(Close, PHighPrice1) AND BuyCond);
+    ShortPrimary     = ShortPrimary OR (Cross(PLowPrice1, Close) AND ShortCond);
+}
+
+Buy     = BuyPrimary;
+Short   = False;
+if (showShortSignals)
+{
+    Short   = ShortPrimary;
+}
 
 PlotShapes(IIf(Buy, shapeHollowUpTriangle, shapeNone), colorGreen, 0, Close, -50);
 PlotShapes(IIf(Short, shapeHollowDownTriangle, shapeNone), colorRed, 0, Close, -50);
