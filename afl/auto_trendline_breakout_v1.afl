@@ -15,41 +15,21 @@ PHighPrice1      = ValueWhen(PHigh, H, 1);
 PHighPrice2      = ValueWhen(PHigh, H, 2);
 PHighPrice3      = ValueWhen(PHigh, H, 3);
 
-// Bar numbers for High Fractals
-PHighBar0        = ValueWhen(PHigh, BarNo, 0);
-PHighBar1        = ValueWhen(PHigh, BarNo, 1);
-PHighBar2        = ValueWhen(PHigh, BarNo, 2);
-PHighBar3        = ValueWhen(PHigh, BarNo, 3);
-
 // Low Fractals (Take last 4)
 PLowPrice0       = ValueWhen(PLow, L, 0);
 PLowPrice1       = ValueWhen(PLow, L, 1);
 PLowPrice2       = ValueWhen(PLow, L, 2);
 PLowPrice3       = ValueWhen(PLow, L, 3);
 
-// Bar numbers for Low Fractals
-PLowBar0         = ValueWhen(PLow, BarNo, 0);
-PLowBar1         = ValueWhen(PLow, BarNo, 1);
-PLowBar2         = ValueWhen(PLow, BarNo, 2);
-PLowBar3         = ValueWhen(PLow, BarNo, 3);
+// Conditions
+BuyCond1         = PHighPrice1 <= PHighPrice2 AND PHighPrice2 <= PHighPrice3;
+ShortCond1       = PLowPrice1 >= PLowPrice2 AND PLowPrice2 >= PLowPrice3;
+BuyCond0         = PHighPrice0 <= PHighPrice1 AND PHighPrice1 <= PHighPrice2;
+ShortCond0       = PLowPrice0 >= PLowPrice1 AND PLowPrice1 >= PLowPrice2;
 
-// Slopes for upper trend lines
-SlopeUp0         = (PHighPrice1 - PHighPrice0)/(PHighBar0 - PHighBar1);
-SlopeUp1         = (PHighPrice2 - PHighPrice1)/(PHighBar1 - PHighBar2);
-SlopeUp2         = (PHighPrice3 - PHighPrice2)/(PHighBar2 - PHighBar3);
-
-// Slopes for lower trend lines
-SlopeLo0         = (PLowPrice0 - PLowPrice1)/(PLowBar0 - PLowBar1);
-SlopeLo1         = (PLowPrice1 - PLowPrice2)/(PLowBar1 - PLowBar2);
-SlopeLo2         = (PLowPrice2 - PLowPrice3)/(PLowBar2 - PLowBar3);
-
-BuyCond1         = SlopeUp1 >= 0 AND SlopeUp2 >= 0 AND PHighPrice1 <= PHighPrice2 AND PHighPrice2 <= PHighPrice3;
-ShortCond1       = SlopeLo1 >= 0 AND SlopeLo2 >= 0 AND PLowPrice1 >= PLowPrice2 AND PLowPrice2 >= PLowPrice3;
-BuyCond0         = SlopeUp0 >= 0 AND SlopeUp1 >= 0 AND PHighPrice0 <= PHighPrice1 AND PHighPrice1 <= PHighPrice2;
-ShortCond0       = SlopeLo0 >= 0 AND SlopeLo1 >= 0 AND PLowPrice0 >= PLowPrice1 AND PLowPrice1 >= PLowPrice2;
- 
-Buy              = (Cross(Close, PHighPrice1) AND BuyCond1); // OR (Cross(Close, PHighPrice0) AND BuyCond0);
-Short            = (Cross(PLowPrice1, Close) AND ShortCond1); // OR (Cross(PLowPrice0, Close) AND ShortCond0);
+// Execution signals
+Buy              = (Cross(Close, PHighPrice1) AND BuyCond1);
+Short            = (Cross(PLowPrice1, Close) AND ShortCond1);
 
 PlotShapes(IIf(Buy, shapeHollowUpTriangle, shapeNone), colorGreen, 0, Close, -50);
 PlotShapes(IIf(Short, shapeHollowDownTriangle, shapeNone), colorRed, 0, Close, -50);
