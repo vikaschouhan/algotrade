@@ -1,8 +1,10 @@
 // AutoTrend v1
 SetBarsRequired(sbrAll,sbrAll);
-nbar             = Param("nbar", 2, 2, 50, 1);
+nbar             = Param("nbar", 2, 2, 10, 1);
 nbarExt          = Param("extra_bars", 1, 1, 10, 1);
-showShortSignals = ParamToggle( "show_short_signals", "No|Yes", 0 );
+stopATRLen       = Optimize("stop_atr_len", 8, 1, 20, 1);
+stopATRMul       = Optimize("stop_atr_mul", 2, 2, 5, 1);
+showShortSignals = ParamToggle("show_short_signals", "No|Yes", 0);
 
 function GetFractals(nbar_t)
 {
@@ -58,11 +60,16 @@ for (i= nbarLow; i <= nbarHigh; i++)
 }
 
 Buy     = BuyPrimary;
+Sell    = 0;
 Short   = False;
+Cover   = 0;
 if (showShortSignals)
 {
     Short   = ShortPrimary;
 }
+
+// Apply stops
+ApplyStop(stopTypeTrailing, stopModePoint, stopATRMul*ATR(stopATRLen), True, True);
 
 PlotShapes(IIf(Buy, shapeHollowUpTriangle, shapeNone), colorGreen, 0, Close, -50);
 PlotShapes(IIf(Short, shapeHollowDownTriangle, shapeNone), colorRed, 0, Close, -50);
