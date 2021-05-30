@@ -1,16 +1,74 @@
 // AutoTrend v1
 SetBarsRequired(sbrAll,sbrAll);
+
+//////////////////////////////////////////////////
+// Inputs
 nbar             = Param("nbar", 2, 2, 10, 1);
 nbarExt          = Param("extra_bars", 1, 1, 10, 1);
-stopATRLen       = Optimize("stop_atr_len", 8, 1, 20, 1);
-stopATRMul       = Optimize("stop_atr_mul", 2, 2, 5, 1);
+stopATRLen       = Param("stop_atr_len", 8, 1, 20, 1);
+stopATRMul       = Param("stop_atr_mul", 2, 2, 5, 1);
 showShortSignals = ParamToggle("show_short_signals", "No|Yes", 0);
 
+//////////////////////////////////////////////////
+// ATR Stop Loss (Trailing)
+function StopTrailingATR(ATR_len, ATR_mul)
+{
+    // calculate support and resistance levels
+    sup = C - ATR_len * ATR(ATR_Len);
+    res = C + ATR_len * ATR(ATR_Len);
+
+    // calculate trailing stop line
+    trailARRAY = 0;
+    trailstop = 0;
+    for(i = 1; i < BarCount; i++)
+    {
+        if(C[i] > trailstop AND C[i - 1] > trailstop)
+            trailstop = Max(trailstop, sup[i]);
+        else
+            if(C[i] < trailstop AND C[i - 1] < trailstop)
+                trailstop = Min(trailstop, res[i]);
+            else
+                trailstop = IIf(C[i] > trailstop, sup[i], res[i]);
+
+        trailARRAY[i] = trailstop; 
+    }
+    return trailArray;
+}
+
+//////////////////////////////////////////////////
+// Get Pivot points based on generic High and Low Levels
+function GetPV(nbar_t, H_level, L_Level)
+{
+    PHigh            = H_Level > Ref(HHV(H_Level, nbar_t), -1) AND Ref(HHV(H_Level, nbar_t), nbar_t) <= H_Level;
+    PLow             = L_Level < Ref(LLV(L_Level, nbar_t), -1) AND Ref(LLV(L_Level, nbar_t), nbar_t) >= L_Level;
+    VarSet("PHigh", PHigh);
+    VarSet("PLow", PLow);
+}
+
+/////////////////////////////////////////////////
+// Get Pivots based on High Low
+function GetPVHL(nbar_t)
+{
+    GetPV(nbar_t, H, L);
+}
+
+/////////////////////////////////////////////////
+// Get Pivots based on Open Close
+function GetPVOC(nbar_t)
+{
+    LHigh            = IIf(O > C, O, C);
+    LLow             = IIf(O < C, O, C);
+    GetPV(nbar_t, LHigh, LLow);
+}
+
+////////////////////////////////////////////////
+// Get Fractals (Previous pivot points)
 function GetFractals(nbar_t)
 {
     // Define conditions
-    PHigh            = H > Ref(HHV(H, nbar_t), -1) AND Ref(HHV(H, nbar_t), nbar_t) <= H;
-    PLow             = L < Ref(LLV(L, nbar_t), -1) AND Ref(LLV(L, nbar_t), nbar_t) >= L;
+    GetPVOC(nbar_t);
+    PHigh            = VarGet("PHigh");
+    PLow             = VarGet("PLow");
 
     // High Fractals (Take last 4)
     PHighPrice1      = ValueWhen(PHigh, H, 1);
@@ -59,17 +117,23 @@ for (i= nbarLow; i <= nbarHigh; i++)
     ShortPrimary     = ShortPrimary OR (Cross(PLowPrice1, Close) AND ShortCond);
 }
 
+// Stop loss
+stopLoss         = StopTrailingATR(stopATRLen, stopATRMul);
+
+///////////////////////////////////////////////////////
+// Final position Signals
 Buy     = BuyPrimary;
-Sell    = 0;
+Sell    = Cross(stopLoss, Close);
 Short   = False;
-Cover   = 0;
+Cover   = False;
 if (showShortSignals)
 {
     Short   = ShortPrimary;
+    Cover   = Cross(Close, stopLoss);
 }
 
-// Apply stops
-ApplyStop(stopTypeTrailing, stopModePoint, stopATRMul*ATR(stopATRLen), True, True);
-
+////////////////////////////////////////////////////////
+// Plots
 PlotShapes(IIf(Buy, shapeHollowUpTriangle, shapeNone), colorGreen, 0, Close, -50);
 PlotShapes(IIf(Short, shapeHollowDownTriangle, shapeNone), colorRed, 0, Close, -50);
+Plot(StopLoss, "Stop Loss", colorRed);
