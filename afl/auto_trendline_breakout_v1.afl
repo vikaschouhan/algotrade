@@ -5,35 +5,10 @@ SetBarsRequired(sbrAll,sbrAll);
 // Inputs
 nbar             = Param("nbar", 2, 2, 10, 1);
 nbarExt          = Param("extra_bars", 1, 1, 10, 1);
-stopATRLen       = Param("stop_atr_len", 8, 1, 20, 1);
-stopATRMul       = Param("stop_atr_mul", 2, 2, 5, 1);
+stopATRLen       = Param("stop_atr_len", 2, 1, 20, 1);
+stopATRMul       = Param("stop_atr_mul", 4, 2, 5, 1);
+stopPVNbar       = Param("stop_pv_nbar", 1,1, 10, 1);
 showShortSignals = ParamToggle("show_short_signals", "No|Yes", 0);
-
-//////////////////////////////////////////////////
-// ATR Stop Loss (Trailing)
-function StopTrailingATR(ATR_len, ATR_mul)
-{
-    // calculate support and resistance levels
-    sup = C - ATR_len * ATR(ATR_Len);
-    res = C + ATR_len * ATR(ATR_Len);
-
-    // calculate trailing stop line
-    trailARRAY = 0;
-    trailstop = 0;
-    for(i = 1; i < BarCount; i++)
-    {
-        if(C[i] > trailstop AND C[i - 1] > trailstop)
-            trailstop = Max(trailstop, sup[i]);
-        else
-            if(C[i] < trailstop AND C[i - 1] < trailstop)
-                trailstop = Min(trailstop, res[i]);
-            else
-                trailstop = IIf(C[i] > trailstop, sup[i], res[i]);
-
-        trailARRAY[i] = trailstop; 
-    }
-    return trailArray;
-}
 
 //////////////////////////////////////////////////
 // Get Pivot points based on generic High and Low Levels
@@ -100,6 +75,48 @@ function GetFractals(nbar_t)
     VarSet("ShortCond", ShortCond);
 }
 
+//////////////////////////////////////////////////
+// ATR Stop Loss (Trailing)
+function StopTrailingATR(ATR_len, ATR_mul)
+{
+    // calculate support and resistance levels
+    sup = C - ATR_len * ATR(ATR_Len);
+    res = C + ATR_len * ATR(ATR_Len);
+
+    // calculate trailing stop line
+    trailARRAY = 0;
+    trailstop = 0;
+    for(i = 1; i < BarCount; i++)
+    {
+        if(C[i] > trailstop AND C[i - 1] > trailstop)
+            trailstop = Max(trailstop, sup[i]);
+        else
+            if(C[i] < trailstop AND C[i - 1] < trailstop)
+                trailstop = Min(trailstop, res[i]);
+            else
+                trailstop = IIf(C[i] > trailstop, sup[i], res[i]);
+
+        trailARRAY[i] = trailstop; 
+    }
+    return trailArray;
+}
+
+///////////////////////////////////////////////////
+// Pivots based stop loss
+function StopTrailingPV(nbar_t)
+{
+    LHigh            = IIf(O > C, O, C);
+    LLow             = IIf(O < C, O, C);
+    GetPV(nbar_t, LHigh, LLow);
+
+    PHigh            = VarGet("PHigh");
+    PLow             = VarGet("PLow");
+    PriceHigh        = ValueWhen(PHigh, LHigh, 1);
+    PriceLow         = ValueWhen(PLow, LLow, 1);
+    
+    return IIf(Close > PriceLow, PriceLow, PriceHigh);
+}
+
 BuyPrimary       = False;
 ShortPrimary     = False;
 nbarLow          = IIf((nbar - nbarExt) < 1, 1, (nbar - nbarExt));
@@ -119,6 +136,7 @@ for (i= nbarLow; i <= nbarHigh; i++)
 
 // Stop loss
 stopLoss         = StopTrailingATR(stopATRLen, stopATRMul);
+//stopLoss          = StopTrailingPV(stopPVNbar);
 
 ///////////////////////////////////////////////////////
 // Final position Signals
