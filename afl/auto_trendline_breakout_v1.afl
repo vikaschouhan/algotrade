@@ -10,6 +10,7 @@ stopATRMul       = Param("stop_atr_mul", 4, 1, 5, 1);
 stopPVNbar       = Param("stop_pv_nbar", 1,1, 10, 1);
 maxOpenPositions = Param("max_open_pos", 0, 0, 10, 1);
 showShortSignals = ParamToggle("show_short_signals", "No|Yes", 0);
+condType         = ParamList("condition_type", "TREND_BREAK|SWING_BREAK|TRENDSWING_BREAK", 0);
 
 //////////////////////////////////////////////////
 // Set max positions etc
@@ -65,10 +66,29 @@ function GetFractals(nbar_t)
     PLowPrice2       = ValueWhen(PLow, L, 2);
     PLowPrice3       = ValueWhen(PLow, L, 3);
     PLowPrice4       = ValueWhen(PLow, L, 4);
-
+    
     // Conditions
-    BuyCond          = PHighPrice1 >= PHighPrice2 AND PHighPrice2 <= PHighPrice3 AND PHighPrice3 <= PHighPrice4;
-    ShortCond        = PLowPrice1 <= PLowPrice2 AND PLowPrice2 >= PLowPrice3 AND PLowPrice3 >= PLowPrice4;
+    BuyCondTrBr      = PHighPrice1 >= PHighPrice2 AND PHighPrice2 <= PHighPrice3 AND PHighPrice3 <= PHighPrice4;
+    ShortCondTrBr    = PLowPrice1 <= PLowPrice2 AND PLowPrice2 >= PLowPrice3 AND PLowPrice3 >= PLowPrice4;
+    BuyCondSwBr      = PHighPrice1 >= PHighPrice2 AND PHighPrice2 >= PHighPrice3;
+    ShortCondSwBr    = PLowPrice1 <= PLowPrice2 AND PLowPrice2 <= PLowPrice3;
+
+    // Select apppropriate conditions
+    if (condType == "TREND_BREAK")
+    {
+        BuyCond          = BuyCondTrBr;
+        ShortCond        = ShortCondTrBr;
+    }
+    else if(condType == "SWING_BREAK")
+    {
+        BuyCond          = BuyCondSwBr;
+        ShortCond        = ShortCondSwBr;
+    }
+    else if(condType =="TRENDSWING_BREAK")
+    {
+        BuyCond          = BuyCondTrBr OR BuyCondSwBr;
+        ShortCond        = ShortCondTrBr OR ShortCondSwBr;
+    }
     
     VarSet("PHighPrice1", PHighPrice1);
     VarSet("PHighPrice2", PHighPrice2);
