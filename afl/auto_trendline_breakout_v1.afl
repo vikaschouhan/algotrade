@@ -5,12 +5,12 @@ SetBarsRequired(sbrAll,sbrAll);
 // Inputs
 nbar             = Param("nbar", 2, 2, 10, 1);
 nbarExt          = Param("extra_bars", 1, 1, 10, 1);
-stopATRLen       = Param("stop_atr_len", 2, 1, 20, 1);
-stopATRMul       = Param("stop_atr_mul", 4, 1, 5, 1);
+stopATRLen       = Param("stop_atr_len", 1, 1, 20, 1);
+stopATRMul       = Param("stop_atr_mul", 1, 1, 8, 1);
 stopPVNbar       = Param("stop_pv_nbar", 1,1, 10, 1);
-maxOpenPositions = Param("max_open_pos", 0, 0, 10, 1);
+maxOpenPositions = Param("max_open_pos", 5, 0, 10, 1);
 showShortSignals = ParamToggle("show_short_signals", "No|Yes", 0);
-condType         = ParamList("condition_type", "TREND_BREAK|SWING_BREAK|TRENDSWING_BREAK", 0);
+condType         = ParamList("condition_type", "TREND_BREAK|SWING_BREAK|TRENDSWING_BREAK|EARLY_BREAK|ALL_BREAK", 2);
 
 //////////////////////////////////////////////////
 // Set max positions etc
@@ -72,6 +72,8 @@ function GetFractals(nbar_t)
     ShortCondTrBr    = PLowPrice1 <= PLowPrice2 AND PLowPrice2 >= PLowPrice3 AND PLowPrice3 >= PLowPrice4;
     BuyCondSwBr      = PHighPrice1 >= PHighPrice2 AND PHighPrice2 >= PHighPrice3;
     ShortCondSwBr    = PLowPrice1 <= PLowPrice2 AND PLowPrice2 <= PLowPrice3;
+    BuyCondTrEBr     = PHighPrice1 <= PHighPrice2 AND PHighPrice2 <= PHighPrice3;
+    ShortCondTrEBr   = PLowPrice1 >= PLowPrice2 AND PLowPrice2 >= PLowPrice3;
 
     // Select apppropriate conditions
     if (condType == "TREND_BREAK")
@@ -79,15 +81,25 @@ function GetFractals(nbar_t)
         BuyCond          = BuyCondTrBr;
         ShortCond        = ShortCondTrBr;
     }
-    else if(condType == "SWING_BREAK")
+    else if (condType == "SWING_BREAK")
     {
         BuyCond          = BuyCondSwBr;
         ShortCond        = ShortCondSwBr;
     }
-    else if(condType =="TRENDSWING_BREAK")
+    else if (condType == "TRENDSWING_BREAK")
     {
         BuyCond          = BuyCondTrBr OR BuyCondSwBr;
         ShortCond        = ShortCondTrBr OR ShortCondSwBr;
+    }
+    else if (condType == "EARLY_BREAK")
+    {
+        BuyCond          = BuyCondTrEBr;
+        ShortCond        = ShortCondTrEBr;
+    }
+    else if (condType == "ALL_BREAK")
+    {
+        BuyCond          = BuyCondTrBr OR BuyCondSwBr OR BuyCondTrEBr;
+        ShortCond        = ShortCondTrBr OR ShortCondSwBr OR ShortCondTrEBr;
     }
     
     VarSet("PHighPrice1", PHighPrice1);
@@ -109,8 +121,8 @@ function GetFractals(nbar_t)
 function StopTrailingATR(ATR_len, ATR_mul)
 {
     // calculate support and resistance levels
-    sup = C - ATR_len * ATR(ATR_Len);
-    res = C + ATR_len * ATR(ATR_Len);
+    sup = C - ATR_mul * ATR(ATR_Len);
+    res = C + ATR_mul * ATR(ATR_Len);
 
     // calculate trailing stop line
     trailARRAY = 0;
