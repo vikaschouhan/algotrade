@@ -10,7 +10,7 @@ stopATRMul       = Param("stop_atr_mul", 1, 1, 8, 1);
 stopPVNbar       = Param("stop_pv_nbar", 1,1, 10, 1);
 maxOpenPositions = Param("max_open_pos", 5, 0, 10, 1);
 showShortSignals = ParamToggle("show_short_signals", "No|Yes", 0);
-condType         = ParamList("condition_type", "TREND_BREAK|SWING_BREAK|TRENDSWING_BREAK|EARLY_BREAK|ALL_BREAK", 2);
+condType         = ParamList("condition_type", "TREND_BREAK|SWING_BREAK|TRENDSWING_BREAK|EARLY_BREAK|ALL_BREAK|EARLY_BREAK2|TREND_SWING_EARLY_BREAK2", 2);
 
 //////////////////////////////////////////////////
 // Set max positions etc
@@ -113,6 +113,28 @@ function GetPrimarySignals(nbar_t, RefSignal)
         ShortCond        = ShortCondTrBr OR ShortCondSwBr OR ShortCondTrEBr;
         BuySignal        = Cross(RefSignal, PHighPrice1) AND BuyCond;
         ShortSignal      = Cross(PLowPrice1, RefSignal) AND ShortCond;
+    }
+    else if (condType == "EARLY_BREAK2")
+    {
+        BuyCond          = BuyCondTrEBr;
+        ShortCond        = ShortCondTrEBr;
+        BuySignal        = (Cross(RefSignal, PHighPrice1) OR Cross(RefSignal, PHighPrice2)) AND BuyCond;
+        ShortSignal      = (Cross(PLowPrice1, RefSignal) OR Cross(PLowPrice2, RefSignal)) AND ShortCond;
+    }
+    else if (condType == "TREND_SWING_EARLY_BREAK2")
+    {
+        BuyCond1         = BuyCondTrBr OR BuyCondSwBr;
+        ShortCond1       = ShortCondTrBr OR ShortCondSwBr;
+        BuySignal1       = Cross(RefSignal, PHighPrice1) AND BuyCond1;
+        ShortSignal1     = Cross(PLowPrice1, RefSignal) AND ShortCond1;
+        //
+        BuyCond2         = BuyCondTrEBr;
+        ShortCond2       = ShortCondTrEBr;
+        BuySignal2       = (Cross(RefSignal, PHighPrice1) OR Cross(RefSignal, PHighPrice2)) AND BuyCond2;
+        ShortSignal2     = (Cross(PLowPrice1, RefSignal) OR Cross(PLowPrice2, RefSignal)) AND ShortCond2;
+        //
+        BuySignal        = BuySignal1 OR BuySignal2;
+        ShortSignal      = ShortSignal1 OR ShortSignal2;
     }
     
     VarSet("BuySignal", BuySignal);
