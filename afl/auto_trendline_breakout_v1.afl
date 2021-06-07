@@ -48,7 +48,7 @@ function GetPVOC(nbar_t)
 
 ////////////////////////////////////////////////
 // Get Fractals (Previous pivot points)
-function GetFractals(nbar_t)
+function GetPrimarySignals(nbar_t, RefSignal)
 {
     // Define conditions
     GetPVOC(nbar_t);
@@ -68,10 +68,13 @@ function GetFractals(nbar_t)
     PLowPrice4       = ValueWhen(PLow, L, 4);
     
     // Conditions
+    // H1 > H2 & H2 < H3 & H3 < H4
     BuyCondTrBr      = PHighPrice1 >= PHighPrice2 AND PHighPrice2 <= PHighPrice3 AND PHighPrice3 <= PHighPrice4;
     ShortCondTrBr    = PLowPrice1 <= PLowPrice2 AND PLowPrice2 >= PLowPrice3 AND PLowPrice3 >= PLowPrice4;
+    // H1 > H2 & H2 > H3
     BuyCondSwBr      = PHighPrice1 >= PHighPrice2 AND PHighPrice2 >= PHighPrice3;
     ShortCondSwBr    = PLowPrice1 <= PLowPrice2 AND PLowPrice2 <= PLowPrice3;
+    // H1 < H2 & H2 < H3
     BuyCondTrEBr     = PHighPrice1 <= PHighPrice2 AND PHighPrice2 <= PHighPrice3;
     ShortCondTrEBr   = PLowPrice1 >= PLowPrice2 AND PLowPrice2 >= PLowPrice3;
 
@@ -80,40 +83,40 @@ function GetFractals(nbar_t)
     {
         BuyCond          = BuyCondTrBr;
         ShortCond        = ShortCondTrBr;
+        BuySignal        = Cross(RefSignal, PHighPrice1) AND BuyCond;
+        ShortSignal      = Cross(PLowPrice1, RefSignal) AND ShortCond;
     }
     else if (condType == "SWING_BREAK")
     {
         BuyCond          = BuyCondSwBr;
         ShortCond        = ShortCondSwBr;
+        BuySignal        = Cross(RefSignal, PHighPrice1) AND BuyCond;
+        ShortSignal      = Cross(PLowPrice1, RefSignal) AND ShortCond;
     }
     else if (condType == "TRENDSWING_BREAK")
     {
         BuyCond          = BuyCondTrBr OR BuyCondSwBr;
         ShortCond        = ShortCondTrBr OR ShortCondSwBr;
+        BuySignal        = Cross(RefSignal, PHighPrice1) AND BuyCond;
+        ShortSignal      = Cross(PLowPrice1, RefSignal) AND ShortCond;
     }
     else if (condType == "EARLY_BREAK")
     {
         BuyCond          = BuyCondTrEBr;
         ShortCond        = ShortCondTrEBr;
+        BuySignal        = Cross(RefSignal, PHighPrice1) AND BuyCond;
+        ShortSignal      = Cross(PLowPrice1, RefSignal) AND ShortCond;
     }
     else if (condType == "ALL_BREAK")
     {
         BuyCond          = BuyCondTrBr OR BuyCondSwBr OR BuyCondTrEBr;
         ShortCond        = ShortCondTrBr OR ShortCondSwBr OR ShortCondTrEBr;
+        BuySignal        = Cross(RefSignal, PHighPrice1) AND BuyCond;
+        ShortSignal      = Cross(PLowPrice1, RefSignal) AND ShortCond;
     }
     
-    VarSet("PHighPrice1", PHighPrice1);
-    VarSet("PHighPrice2", PHighPrice2);
-    VarSet("PHighPrice3", PHighPrice3);
-    VarSet("PHighPrice4", PHighPrice4);
-    
-    VarSet("PLowPrice1", PLowPrice1);
-    VarSet("PLowPrice2", PLowPrice2);
-    VarSet("PLowPrice3", PLowPrice3);
-    VarSet("PLotPrice4", PLowPrice4);
-    
-    VarSet("BuyCond", BuyCond);
-    VarSet("ShortCond", ShortCond);
+    VarSet("BuySignal", BuySignal);
+    VarSet("ShortSignal", ShortSignal);
 }
 
 //////////////////////////////////////////////////
@@ -158,6 +161,8 @@ function StopTrailingPV(nbar_t)
     return IIf(Close > PriceLow, PriceLow, PriceHigh);
 }
 
+///////////////////////////////////////////////////
+// Main logic starts from here.
 BuyPrimary       = False;
 ShortPrimary     = False;
 nbarLow          = IIf((nbar - nbarExt) < 1, 1, (nbar - nbarExt));
@@ -166,13 +171,11 @@ nbarHigh         = (nbar + nbarExt);
 // Execution signals
 for (i= nbarLow; i <= nbarHigh; i++)
 {
-    GetFractals(i);
-    BuyCond          = VarGet("BuyCond");
-    ShortCond        = VarGet("ShortCond");
-    PHighPrice1      = VarGet("PHighPrice1");
-    PLowPrice1       = VarGet("PLowPrice1");
-    BuyPrimary       = BuyPrimary OR (Cross(Close, PHighPrice1) AND BuyCond);
-    ShortPrimary     = ShortPrimary OR (Cross(PLowPrice1, Close) AND ShortCond);
+    GetPrimarySignals(i, Close);
+    BuySignal        = VarGet("BuySignal");
+    ShortSignal      = VarGet("ShortSignal");
+    BuyPrimary       = BuyPrimary OR BuySignal;
+    ShortPrimary     = ShortPrimary OR ShortSignal;
 }
 
 // Stop loss
