@@ -3,7 +3,7 @@ SetBarsRequired(sbrAll,sbrAll);
 
 //////////////////////////////////////////////////
 // Inputs
-nbar             = Param("nbar", 2, 2, 10, 1);
+nbar             = Param("nbar", 2, 1, 10, 1);
 nbarExt          = Param("extra_bars", 1, 1, 10, 1);
 stopATRLen       = Param("stop_atr_len", 1, 1, 20, 1);
 stopATRMul       = Param("stop_atr_mul", 1, 1, 8, 1);
