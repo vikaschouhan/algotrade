@@ -206,11 +206,11 @@ stopLoss         = StopTrailingATR(stopATRLen, stopATRMul);
 
 ///////////////////////////////////////////////////////
 // Final position Signals
-Buy     = BuyPrimary;
-Short   = ShortPrimary;
+Buy     = Ref(BuyPrimary, -1);
+Short   = Ref(ShortPrimary, -1);
 
 ////////////////////////////////////////////////////////
 // Plots
 PlotShapes(IIf(Buy, shapeHollowUpTriangle, shapeNone), colorGreen, 0, Close, -50);
 PlotShapes(IIf(Short, shapeHollowDownTriangle, shapeNone), colorRed, 0, Close, -50);
-Plot(StopLoss, "Stop Loss", colorRed);
+//Plot(StopLoss, "Stop Loss", colorRed);
