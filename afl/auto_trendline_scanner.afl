@@ -11,6 +11,7 @@ stopPVNbar       = Param("stop_pv_nbar", 1,1, 10, 1);
 maxOpenPositions = Param("max_open_pos", 5, 0, 500, 1);
 showShortSignals = ParamToggle("show_short_signals", "No|Yes", 0);
 condType         = ParamList("condition_type", "TREND_BREAK|SWING_BREAK|TRENDSWING_BREAK|EARLY_BREAK|ALL_BREAK|EARLY_BREAK2|TREND_SWING_EARLY_BREAK2", 4);
+tfList           = ParamList("timeframe_list", "DAILY|HOURLY_DAILY_WEEKLY|DAILY_WEEKLY|DAILY_WEEKLY_MONTHLY", 0);
 
 //////////////////////////////////////////////////
 // Set max positions etc
@@ -46,26 +47,80 @@ function GetPVOC(nbar_t)
     GetPV(nbar_t, LHigh, LLow);
 }
 
+/////////////////////////////////////////////////
+// Get TimeFrame
+function GetTimeFrame(tiFrame)
+{
+    tFrame           = inDaily;
+    if (tiFrame == "HOURLY")
+    {
+        tFrame       = inHourly;
+    }
+    else if (tiFrame == "4HOURLY")
+    {
+        tFrame       = 4*inHourly;
+    }
+    else if (tiFrame == "DAILY")
+    {
+        tFrame       = inDaily;
+    }
+    else if (tiFrame == "2DAILY")
+    {
+        tFrame       = 2*inDaily;
+    }
+    else if (tiFrame == "4DAILY")
+    {
+        tFrame       = 4*inDaily;
+    }
+    else if (tiFrame == "WEEKLY")
+    {
+        tFrame       = inWeekly;
+    }
+    else if (tiFrame == "2WEEKLY")
+    {
+        tFrame       = 2*inWeekly;
+    }
+    else if (tiFrame == "MONTHLY")
+    {
+        tFrame       = inMonthly;
+    }
+    return tFrame;
+}
+
 ////////////////////////////////////////////////
 // Get Fractals (Previous pivot points)
-function GetPrimarySignals(nbar_t, RefSignal)
+function GetPrimarySignals(nbar_t, RefSignal, tFrame)
 {
+    TimeFrameSet(tFrame);
+
     // Define conditions
     GetPVOC(nbar_t);
     PHigh            = VarGet("PHigh");
     PLow             = VarGet("PLow");
 
     // High Fractals (Take last 4)
-    PHighPrice1      = ValueWhen(PHigh, H, 1);
-    PHighPrice2      = ValueWhen(PHigh, H, 2);
-    PHighPrice3      = ValueWhen(PHigh, H, 3);
-    PHighPrice4      = ValueWhen(PHigh, H, 4);
+    PHighPrice1t     = ValueWhen(PHigh, H, 1);
+    PHighPrice2t     = ValueWhen(PHigh, H, 2);
+    PHighPrice3t     = ValueWhen(PHigh, H, 3);
+    PHighPrice4t     = ValueWhen(PHigh, H, 4);
 
     // Low Fractals (Take last 4)
-    PLowPrice1       = ValueWhen(PLow, L, 1);
-    PLowPrice2       = ValueWhen(PLow, L, 2);
-    PLowPrice3       = ValueWhen(PLow, L, 3);
-    PLowPrice4       = ValueWhen(PLow, L, 4);
+    PLowPrice1t      = ValueWhen(PLow, L, 1);
+    PLowPrice2t      = ValueWhen(PLow, L, 2);
+    PLowPrice3t      = ValueWhen(PLow, L, 3);
+    PLowPrice4t      = ValueWhen(PLow, L, 4);
+
+    TimeFrameRestore();
+
+    PHighPrice1      = TimeFrameExpand(PHighPrice1t, tFrame);
+    PHighPrice2      = TimeFrameExpand(PHighPrice2t, tFrame);
+    PHighPrice3      = TimeFrameExpand(PHighPrice3t, tFrame);
+    PHighPrice4      = TimeFrameExpand(PHighPrice4t, tFrame);
+
+    PLowPrice1       = TimeFrameExpand(PLowPrice1t, tFrame);
+    PLowPrice2       = TimeFrameExpand(PLowPrice2t, tFrame);
+    PLowPrice3       = TimeFrameExpand(PLowPrice3t, tFrame);
+    PLowPrice4       = TimeFrameExpand(PLowPrice4t, tFrame);
     
     // Conditions
     // H1 > H2 & H2 < H3 & H3 < H4
@@ -190,14 +245,21 @@ ShortPrimary     = False;
 nbarLow          = IIf((nbar - nbarExt) < 1, 1, (nbar - nbarExt));
 nbarHigh         = (nbar + nbarExt);
 
-// Execution signals
-for (i= nbarLow; i <= nbarHigh; i++)
+// Iterate over TimeFrames
+for (j= 0; (tf = StrExtract(tfList, j, seperator='_')) != ""; j++)
 {
-    GetPrimarySignals(i, Close);
-    BuySignal        = VarGet("BuySignal");
-    ShortSignal      = VarGet("ShortSignal");
-    BuyPrimary       = BuyPrimary OR BuySignal;
-    ShortPrimary     = ShortPrimary OR ShortSignal;
+    // Convert word based time frame to actualy amibroker timeframe
+    tFrame       = GetTimeFrame(tf);
+
+    // Execution signals
+    for (i = nbarLow; i <= nbarHigh; i++)
+    {
+        GetPrimarySignals(i, Close, tFrame);
+        BuySignal        = VarGet("BuySignal");
+        ShortSignal      = VarGet("ShortSignal");
+        BuyPrimary       = BuyPrimary OR BuySignal;
+        ShortPrimary     = ShortPrimary OR ShortSignal;
+    }
 }
 
 // Stop loss
