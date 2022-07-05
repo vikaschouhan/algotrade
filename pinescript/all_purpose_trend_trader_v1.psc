@@ -2,6 +2,15 @@
 strategy("All purpose trend trader v1", overlay=true)
 
 //////////////////////////////////////////////////
+// Input Groups
+/////////////////////////////////////////////////
+group_master = "Master Selector"
+group_simple_pivot = "Simple Pivot"
+group_simple_orb = "Simple ORB"
+group_simple_pivot_v2 = "Simple Pivot v2"
+group_ma_filter = "MA Filter"
+
+//////////////////////////////////////////////////
 // Misc functions
 //////////////////////////////////////////////////
 is_newbar(res) =>
@@ -11,14 +20,14 @@ is_newbar(res) =>
 //////////////////////////////////////////////////
 // General selection options
 //////////////////////////////////////////////////
-trend_algo  = input.string(defval="pivot_simple", title="Trend selection algo", options=["pivot_simple", "pivot_simple_heikinashi", "orb_simple"])
+trend_algo  = input.string(defval="pivot_simple", title="Trend selection algo", group=group_master, options=["pivot_simple", "pivot_simple_heikinashi", "orb_simple", "pivot_v2_simple"])
 
 /////////////////////////////////////////////////
 // Pivots Points
 /////////////////////////////////////////////////
-pivot_simple_time_frame     = input.timeframe(defval="",     title="Simple Pivot Time Frame")
-pivot_simple_tolerance      = input.int(defval=5,            title="Simple Pivot Tolerance")
-pivot_simple_level_type     = input.string(defval='r1-s1',   title="Simple Pivot Level type", options=['r1-s1', 'r2-s2', 'h-l'])
+pivot_simple_time_frame     = input.timeframe(defval="",     title="Simple Pivot Time Frame", group=group_simple_pivot)
+pivot_simple_tolerance      = input.int(defval=5,            title="Simple Pivot Tolerance", group=group_simple_pivot)
+pivot_simple_level_type     = input.string(defval='r1-s1',   title="Simple Pivot Level type", options=['r1-s1', 'r2-s2', 'h-l'], group=group_simple_pivot)
 
 pivot_cpr(time_frame) =>
     prev_close  = 0.0
@@ -78,12 +87,30 @@ if pivot_simple_level_type == 'h-l'
     pivot_simple_s_level  := p1_prev_low
 //
 
+/////////////////////////////////////////////////////////////////////
+// Pivot points v2
+/////////////////////////////////////////////////////////////////////
+pivot_v2_simple_nbars     = input.int(defval=2,               title='Simple Pivot v2 num_bars', group=group_simple_pivot_v2)
+pivot_v2_simple_tolerance = input.int(defval=0,               title='Simple Pivot v2 tolerance', group=group_simple_pivot_v2)
+pivot_v2_simple_tframe    = input.timeframe(defval='1D',      title='Simple Pivot v2 Time Frame', group=group_simple_pivot_v2)
+
+pivot_v2_simple_phigh_tt  = ta.pivothigh(pivot_v2_simple_nbars, pivot_v2_simple_nbars)
+pivot_v2_simple_plow_tt   = ta.pivotlow(pivot_v2_simple_nbars, pivot_v2_simple_nbars)
+
+pivot_v2_simple_phigh     = request.security(syminfo.tickerid, pivot_v2_simple_tframe, pivot_v2_simple_phigh_tt)
+pivot_v2_simple_plow      = request.security(syminfo.tickerid, pivot_v2_simple_tframe, pivot_v2_simple_plow_tt)
+
+pivot_v2_simple_phigh_san = 0.0
+pivot_v2_simple_plow_san  = 0.0
+pivot_v2_simple_phigh_san := nz(pivot_v2_simple_phigh[1]) ? pivot_v2_simple_phigh[1] : pivot_v2_simple_phigh_san[1]
+pivot_v2_simple_plow_san  := nz(pivot_v2_simple_plow[1]) ? pivot_v2_simple_plow[1] : pivot_v2_simple_plow_san[1] 
+
 ////////////////////////////////////////////////////////////////////
 // ORB indicator
 ////////////////////////////////////////////////////////////////////
-orb_simple_tolerance    = input.float(defval=0.0,       title="ORB_Simple_Tolerance")
-orb_simple_resolution   = input.timeframe(defval='',    title="ORB_Simple_Resolution")
-orb_simple_time_gap     = input.timeframe(defval='1D',  title="ORB_Simple_Time_Gap")
+orb_simple_tolerance    = input.float(defval=0.0,       title="ORB_Simple_Tolerance", group=group_simple_orb)
+orb_simple_resolution   = input.timeframe(defval='',    title="ORB_Simple_Resolution", group=group_simple_orb)
+orb_simple_time_gap     = input.timeframe(defval='1D',  title="ORB_Simple_Time_Gap", group=group_simple_orb)
 
 orb_simple_high_range   = ta.valuewhen(is_newbar(orb_simple_time_gap), high, 0)
 orb_simple_low_range    = ta.valuewhen(is_newbar(orb_simple_time_gap), low,  0)
@@ -95,10 +122,10 @@ orb_simple_basisL       = math.avg(orb_simple_high_rangeL, orb_simple_low_rangeL
 ////////////////////////////////////////////////////////////////////
 // EMA Filters
 ////////////////////////////////////////////////////////////////////
-ema_len1          = input.int(defval=50,   title='EMA1')
-ema_len2          = input.int(defval=100,  title='EMA2')
-ema_len3          = input.int(defval=200,  title='EMA3')
-ema_time_frame    = input.timeframe(defval="", title="EMA time frame")
+ema_len1          = input.int(defval=50,   title='EMA1', group=group_ma_filter)
+ema_len2          = input.int(defval=100,  title='EMA2', group=group_ma_filter)
+ema_len3          = input.int(defval=200,  title='EMA3', group=group_ma_filter)
+ema_time_frame    = input.timeframe(defval="", title="EMA time frame", group=group_ma_filter)
 
 ema_1 = request.security(syminfo.tickerid, ema_time_frame, ta.ema(close, ema_len1))
 ema_2 = request.security(syminfo.tickerid, ema_time_frame, ta.ema(close, ema_len2))
@@ -123,6 +150,12 @@ if trend_algo == "orb_simple"
     sell_trend    := (close < orb_simple_low_rangeL - orb_simple_tolerance)
     trend_sig_up  := orb_simple_high_rangeL
     trend_sig_dn  := orb_simple_low_rangeL
+//
+if trend_algo == "pivot_v2_simple"
+    buy_trend     := (close > pivot_v2_simple_phigh_san + pivot_v2_simple_tolerance)
+    sell_trend    := (close < pivot_v2_simple_plow_san - pivot_v2_simple_tolerance)
+    trend_sig_up  := pivot_v2_simple_phigh_san
+    trend_sig_dn  := pivot_v2_simple_plow_san
 //
 
 // Apply filter
