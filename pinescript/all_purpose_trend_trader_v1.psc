@@ -8,6 +8,7 @@ group_master = "Master Selector"
 group_simple_pivot = "Simple Pivot"
 group_simple_orb = "Simple ORB"
 group_simple_pivot_v2 = "Simple Pivot v2"
+group_simple_heikinashi_levels = "Simple Heikinashi Levels"
 group_ma_filter = "MA Filter"
 
 //////////////////////////////////////////////////
@@ -20,7 +21,7 @@ is_newbar(res) =>
 //////////////////////////////////////////////////
 // General selection options
 //////////////////////////////////////////////////
-trend_algo  = input.string(defval="pivot_simple", title="Trend selection algo", group=group_master, options=["pivot_simple", "pivot_simple_heikinashi", "orb_simple", "pivot_v2_simple"])
+trend_algo  = input.string(defval="pivot_simple", title="Trend selection algo", group=group_master, options=["pivot_simple", "pivot_simple_heikinashi", "orb_simple", "pivot_v2_simple", "simple_heikinashi_levels"])
 
 /////////////////////////////////////////////////
 // Pivots Points
@@ -119,6 +120,22 @@ orb_simple_high_rangeL  = request.security(syminfo.tickerid, orb_simple_resoluti
 orb_simple_low_rangeL   = request.security(syminfo.tickerid, orb_simple_resolution, orb_simple_low_range)
 orb_simple_basisL       = math.avg(orb_simple_high_rangeL, orb_simple_low_rangeL)
 
+///////////////////////////////////////////////////////////////////////
+// SImple Heikinashi Levels
+///////////////////////////////////////////////////////////////////////
+heikinashi_simple_levels_timeframe = input.timeframe(defval="D", title="HeikinAshi Simple Levels Time Frame", group=group_simple_heikinashi_levels)
+heikinashi_simple_levels_shift_1   = input.int(defval=0, title="Heikinashi Simple Levels Shift Offset 1", group=group_simple_heikinashi_levels)
+heikinashi_simple_levels_shift_2   = input.int(defval=0, title="Heikinashi Simple Levels Shift Offset 2", group=group_simple_heikinashi_levels)
+heikinashi_simple_source           = input.source(defval=hlc3, title="Heikinashi Simple Levels Source", group=group_simple_heikinashi_levels)
+heikinashi_simple_ema_len          = input.int(defval=1, title="Heikinashi Simple Levels EMA Length", group=group_simple_heikinashi_levels)
+
+heikinashi_simple_l1 = request.security(ticker.heikinashi(syminfo.tickerid), heikinashi_simple_levels_timeframe, heikinashi_simple_source, lookahead=barmerge.lookahead_on)
+heikinashi_simple_l2 = request.security(ticker.heikinashi(syminfo.tickerid), heikinashi_simple_levels_timeframe, heikinashi_simple_source, lookahead=barmerge.lookahead_on)
+
+//Moving Average
+heikinashi_simple_fast = ta.ema(heikinashi_simple_l1[heikinashi_simple_levels_shift_1], heikinashi_simple_ema_len)
+heikinashi_simple_slow = ta.ema(heikinashi_simple_l2[heikinashi_simple_levels_shift_2], heikinashi_simple_ema_len)
+
 ////////////////////////////////////////////////////////////////////
 // EMA Filters
 ////////////////////////////////////////////////////////////////////
@@ -156,6 +173,12 @@ if trend_algo == "pivot_v2_simple"
     sell_trend    := (close < pivot_v2_simple_plow_san - pivot_v2_simple_tolerance)
     trend_sig_up  := pivot_v2_simple_phigh_san
     trend_sig_dn  := pivot_v2_simple_plow_san
+//
+if trend_algo == "simple_heikinashi_levels"
+    buy_trend     := heikinashi_simple_fast > heikinashi_simple_slow
+    sell_trend    := heikinashi_simple_fast < heikinashi_simple_slow
+    trend_sig_up  := heikinashi_simple_fast
+    trend_sig_dn  := heikinashi_simple_slow
 //
 
 // Apply filter
