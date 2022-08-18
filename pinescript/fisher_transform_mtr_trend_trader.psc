@@ -9,6 +9,7 @@ strategy(title="Fisher Transform MTR Trend trader", overlay=false)
 fish_length    = input.int(defval=10,        title='Fisher Transform Period', minval=1)
 fish_threshold = input.float(defval=0.001,   title='Fisher Transform crossover threshold', step=0.001)
 fish_timeframe = input.timeframe(defval="",  title='Fisher Transform Timeframe')
+fish_lag       = input.int(defval=1,         title='Fisher Transform Lag Peridod for crossover signals')
 fish_use_ema   = input.bool(defval=false,    title='Use smoothed ema for Fisher Transform')
 fish_ema_len   = input.int(defval=1,         title='Fisher Transform EMA Length (only when enabled)')
 fish_alpha     = input.float(defval=0.66,    title='Fisher Alpha (Change with Caution)', step=0.01)
@@ -51,8 +52,8 @@ get_fisher(f_src, f_length, f_alpha, f_delta) =>
 // Get higher time frame data
 [fish_src]     = get_fisher_source(hl2, fish_use_ema, fish_ema_len)
 [fish_ind]     = get_fisher(fish_src, fish_length, fish_alpha, fish_delta)
-fish_ind_mtr   = request.security(syminfo.tickerid, fish_timeframe, fish_ind, barmerge.gaps_off, barmerge.lookahead_on)
-fish_trig_mtr  = request.security(syminfo.tickerid, fish_timeframe, nz(fish_ind[1]), barmerge.gaps_off, barmerge.lookahead_on)
+fish_ind_mtr   = request.security(syminfo.tickerid, fish_timeframe, fish_ind[1], barmerge.gaps_off, barmerge.lookahead_on)
+fish_trig_mtr  = nz(fish_ind_mtr[1+fish_lag])
 
 //////////////////////////////////////////////
 // Generate trading signals

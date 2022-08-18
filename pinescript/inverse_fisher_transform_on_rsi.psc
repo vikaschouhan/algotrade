@@ -5,16 +5,17 @@ strategy("Inverse Fisher Transform on RSI", shorttitle="IFTRSI")
 
 /////////////////////////////////////////////////
 // Parameters
-ifish_rsi_length = input.int(defval=5,         title="Inv Fisher Transform - RSI Length")
-ifish_wma_length = input.int(defval=9,         title="Inv Fisher Transform - RSI Smoothing length")
-ifish_timeframe  = input.timeframe(defval="",  title="Inv Fisher Transform - RSI TimeFrame")
+ifish_rsi_length     = input.int(defval=5,         title="Inv Fisher Transform - RSI Length")
+ifish_wma_length     = input.int(defval=9,         title="Inv Fisher Transform - RSI Smoothing length")
+ifish_psma_length    = input.int(defval=1,         title="Inv Fisher Transform - Post Smooth Length")
+ifish_timeframe      = input.timeframe(defval="",  title="Inv Fisher Transform - RSI TimeFrame")
 
 ////////////////////////////////////////////////
 // Signals
 ifish_rsi_ind       = 0.1 * (ta.rsi(close, ifish_rsi_length) - 50)
 ifish_srsi_ind      = ta.wma(ifish_rsi_ind, ifish_wma_length)
-ifish_input         = request.security(syminfo.tickerid, ifish_timeframe, ifish_srsi_ind, barmerge.gaps_off, barmerge.lookahead_on)
-ifish_ind           = (math.exp(2*ifish_input) - 1)/(math.exp(2*ifish_input) + 1)
+ifish_input         = request.security(syminfo.tickerid, ifish_timeframe, ifish_srsi_ind[1], barmerge.gaps_on, lookahead=barmerge.lookahead_on)
+ifish_ind           = ta.ema((math.exp(2*ifish_input) - 1)/(math.exp(2*ifish_input) + 1), ifish_psma_length)
 
 /////////////////////////////////////////////////
 // Positional signals

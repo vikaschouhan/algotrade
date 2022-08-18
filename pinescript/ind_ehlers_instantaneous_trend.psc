@@ -5,7 +5,7 @@ study(title="Ehlers Instantaneous Trend", overlay=true)
 // Inputs
 ind_src         = input(hl2,    title="Source")
 ind_alpha       = input(0.07,   title="Alpha", step=0.01)
-ind_timeframe   = input('1D',   title="Time Frame", type=input.resolution)
+ind_timeframe   = input('',     title="Time Frame", type=input.resolution)
 
 /////////////////////////////////////////////////////
 // Indicators
@@ -18,8 +18,8 @@ ehlers_itrend() =>
 //
 
 [ind_it_t, ind_lag_t] = ehlers_itrend()
-ind_it                = security(syminfo.tickerid, ind_timeframe, ind_it_t)
-ind_lag               = security(syminfo.tickerid, ind_timeframe, ind_lag_t)
+ind_it                = security(syminfo.tickerid, ind_timeframe, ind_it_t[1], lookahead=barmerge.lookahead_on)
+ind_lag               = security(syminfo.tickerid, ind_timeframe, ind_lag_t[1], lookahead=barmerge.lookahead_on)
 
 /////////////////////////////////////////////////////
 // Plots
