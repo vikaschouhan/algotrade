@@ -1,19 +1,29 @@
-//@version=4
+//@version=5
 strategy("R1-S1 breakout with ema filters", overlay=true)
 
-time_frame     = input(defval="",      type=input.resolution)
-ema_time_frame = input(defval="",      type=input.resolution)
-tolerance      = input(defval=5,       type=input.integer)
-level_type     = input(defval='r1-s1', type=input.string, options=['r1-s1', 'r2-s2', 'h-l'])
-ema_len1       = input(defval=50,      type=input.integer)
-ema_len2       = input(defval=100,     type=input.integer)
-ema_len3       = input(defval=200,     type=input.integer)
+////////////////////////////////////////////////////
+// Inputs
+time_frame     = input.timeframe(defval="",      title="Primary time frame")
+ema_time_frame = input.timeframe(defval="",      title="Trend filter time frame")
+tolerance      = input.int(defval=25,            title="Tolerance value")
+level_type     = input.string(defval='r1-s1',    title="Level type", options=['r1-s1', 'r2-s2', 'h-l'])
+ema_len1       = input.int(defval=50,            title="EMA Length 1")
+ema_len2       = input.int(defval=100,           title="EMA Length 2")
+ema_len3       = input.int(defval=200,           title="EMA Length 3")
 
+///////////////////////////////////////////////////////
+// Get data from high time frame
+get_security(_src, _tf) =>
+    request.security(syminfo.tickerid, _tf, _src[1], gaps=barmerge.gaps_on, lookahead=barmerge.lookahead_on)
+//
+
+////////////////////////////////////////////////////////
+// Pivot calculating functions
 pivot_cpr(time_frame) =>
-    prev_close     = security(syminfo.tickerid, time_frame, close[1], lookahead=true)
-    prev_open      = security(syminfo.tickerid, time_frame, open[1], lookahead=true)
-    prev_high      = security(syminfo.tickerid, time_frame, high[1], lookahead=true)
-    prev_low       = security(syminfo.tickerid, time_frame, low[1], lookahead=true)
+    prev_close     = get_security(close, time_frame)
+    prev_open      = get_security(open, time_frame)
+    prev_high      = get_security(high, time_frame)
+    prev_low       = get_security(low, time_frame)
 
     pi_level       = (prev_high + prev_low + prev_close)/3
     bc_level       = (prev_high + prev_low)/2
@@ -43,18 +53,30 @@ if level_type == 'h-l'
     s_level  := prev_low
 //
 
-ema_1 = security(syminfo.tickerid, ema_time_frame, ema(close, ema_len1))
-ema_2 = security(syminfo.tickerid, ema_time_frame, ema(close, ema_len2))
-ema_3 = security(syminfo.tickerid, ema_time_frame, ema(close, ema_len3))
+////////////////////////////////////////////////////////////////
+// Trend filters
+ema_1 = get_security(ta.ema(close, ema_len1), ema_time_frame)
+ema_2 = get_security(ta.ema(close, ema_len2), ema_time_frame)
+ema_3 = get_security(ta.ema(close, ema_len3), ema_time_frame)
 
+/////////////////////////////////////////////////////////////
+// Position triggers
 buy  = (close > r_level + tolerance) and (ema_1 >= ema_2) and (ema_2 >= ema_3)
 sell = (close < s_level - tolerance) and (ema_1 <= ema_2) and (ema_2 <= ema_3)
 
-strategy.entry("L", strategy.long, when=buy)
-strategy.entry("S", strategy.short, when=sell)
+/////////////////////////////////////////////////////////////
+// Execute positions
+if buy
+    strategy.entry("L", strategy.long)
+//
+if sell
+    strategy.entry("S", strategy.short)
+//
 
-plot(r_level, style=plot.style_circles, linewidth=1, color=color.green,   title="R1")
-plot(s_level, style=plot.style_circles, linewidth=1, color=color.red,     title="S1")
-plot(ema_1,   style=plot.style_line,    linewidth=1, color=color.orange,  title='EMA1')
-plot(ema_2,   style=plot.style_line,    linewidth=1, color=color.olive,   title='EMA2')
-plot(ema_3,   style=plot.style_line,    linewidth=1, color=color.blue,    title='EMA3')
+//////////////////////////////////////////////////////////////////////////
+// Plotting functions
+plot(r_level, style=plot.style_circles, linewidth=1, color=color.green, title="R1")
+plot(s_level, style=plot.style_circles, linewidth=1, color=color.red,   title="S1")
+plot(ema_1,   style=plot.style_line,    linewidth=1, color=color.blue,  title="EMA1")
+plot(ema_2,   style=plot.style_line,    linewidth=1, color=color.red,   title="EMA2")
+plot(ema_3,   style=plot.style_line,    linewidth=1, color=color.green, title="EMA3")
