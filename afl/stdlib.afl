@@ -1,0 +1,140 @@
+_SECTION_BEGIN("Standard Library functions");
+
+TIME_FRAMES = "DEFAULT|1MINUTE|5MINUTES|10MINUTES|15MINUTES|30MINUTES|1HOUR|2HOURS|4HOURS|5HOURS|1DAY|2DAYS|4DAYS|1WEEK|2WEEKS|1MONTH|1QUARTER";
+RS_LEVELS   = "R1_S1|R2_S2|H_L";
+
+// Get afl timeframe from timeframe string
+function G_TimeFrame(t_frame)
+{
+    tFrame = 0;
+    if (t_frame == "1MINUTE"){
+        tFrame = in1Minute;
+    }else if(t_frame == "5MINUTES"){
+        tFrame = 5*in1Minute;
+    }else if(t_frame == "10MINUTES"){
+        tFrame = 10*in1Minute;
+    }else if(t_frame == "15MINUTES"){
+        tFrame = in15Minute;
+    }else if(t_frame == "30MINUTES"){
+        tFrame = 2*in15Minute;
+    }else if(t_frame == "1HOUR"){
+        tFrame = inHourly;
+    }else if(t_frame == "2HOURS"){
+        tFrame = 2*inHourly;
+    }else if(t_frame == "4HOURS"){
+        tFrame = 4*inHourly;
+    }else if(t_frame == "5HOURS"){
+        tFrame = 5*inHourly;
+    }else if (t_frame == "1DAY"){
+        tFrame = inDaily;
+    }else if (t_frame == "2DAYS"){
+        tFrame = 2*inDaily;
+    }else if (t_frame == "4DAYS"){
+        tFrame = 4*inDaily;
+    }else if (t_frame == "1WEEK"){
+        tFrame = inWeekly;
+    }else if (t_frame == "2WEEKS"){
+        tFrame = 2*inWeekly;
+    }else if (t_frame == "1MONTH"){
+        tFrame = inMonthly;
+    }else if (t_frame == "2MONTHS"){
+        tFrame = 2*inMonthly;
+    }else if (t_frame == "1QUARTER"){
+        tFrame = inQuarterly;
+    }else if (t_frame == "" OR t_frame == "DEFAULT"){
+        tFrame = Interval(0);
+    }else{
+        Error("Wrong time frame " + t_frame);
+    }
+    return tFrame;
+}
+
+// Get CPR Pivots
+function G_Pivots(t_frame)
+{
+    // Get Time frame in numerical format
+    tt_frame = G_TimeFrame(t_frame);
+    
+    PDH = TimeFrameGetPrice("H", tt_frame, -1);    
+    PDL = TimeFrameGetPrice("L", tt_frame, -1);
+    PDC = TimeFrameGetPrice("C", tt_frame, -1);
+    PDO = TimeFrameGetPrice("O", tt_frame, -1);
+    
+    PI_Level = (PDH + PDL + PDC)/3;
+    BC_Level = (PDH + PDL)/2;
+    TC_Level = (PI_Level - BC_Level) + PI_Level;
+    R1_Level = PI_Level * 2 - PDL;
+    S1_Level = PI_Level * 2 - PDH;
+    R2_Level = (PI_Level - S1_Level) + R1_Level;
+    S2_Level = PI_Level - (R1_Level - S1_Level);
+ 
+    VarSet("PH", PDH);
+    VarSet("PL", PDL);   
+    VarSet("PI", PI_Level);
+    VarSet("BC", BC_Level);
+    VarSet("TC", TC_Level);
+    VarSet("R1", R1_Level);
+    VarSet("S1", S1_Level);
+    VarSet("R2", R2_Level);
+    VarSet("S2", S2_Level);
+}
+
+function G_PivotsRS(t_frame, rs_type)
+{
+    G_Pivots(t_frame);
+    if (rs_type == "R1_S1"){
+        VarSet("R", VarGet("R1"));
+        VarSet("S", VarGet("S1"));
+    }else if (rs_type == "R2_S2"){
+        VarSet("R", VarGet("R2"));
+        VarSet("S", VarGet("S2"));
+    }else if (rs_type == "H_L"){
+        VarSet("R", VarGet("PH"));
+        VarSet("S", VarGet("PL"));
+    }else{
+        Error("Wrong rs_type " + rs_type);
+    }
+}
+
+function G_TimeFrameFromIndex(index)
+{
+    str_tf = StrExtract(TIME_FRAMES, index, separator='|');
+    return str_tf;
+}
+
+function G_NumTimeFrames()
+{
+    return 1 + StrCount(TIME_FRAMES, "|");
+}
+
+function G_RSLevelsFromIndex(index)
+{
+    str_level = StrExtract(RS_Levels, index, separator='|');
+    return str_level;
+}
+
+function G_NumRSLevels()
+{
+    return 1 + StrCount(RS_LEVELS, "|");
+}
+
+// MTF EMA
+function G_EMA(period, t_frame, shift)
+{
+    tt_frame = G_TimeFrame(t_frame);
+    TimeFrameSet(tt_frame);
+    EMA_v = Ref(EMA(C, period), shift);
+    TimeFrameRestore();
+    return TimeFrameExpand(EMA_v, tt_frame);
+}
+
+function G_ADX(period, t_frame, shift)
+{
+    tt_frame = G_TimeFrame(t_frame);
+    TimeFrameSet(tt_frame);
+    ADX_v = Ref(ADX(period), shift);
+    TimeFrameRestore();
+    return TimeFrameExpand(ADX_v, tt_frame);
+}
+
+_SECTION_END();
