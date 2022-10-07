@@ -1,116 +1,50 @@
-_SECTION_BEGIN("Pivot Levels");
+#include <stdlib.afl>
 
-TIME_FRAMES = "DEFAULT|1MINUTE|5MINUTES|10MINUTES|15MINUTES|30MINUTES|1HOUR|2HOURS|4HOURS|5HOURS|1DAY|2DAYS|4DAYS|1WEEK|2WEEKS|1MONTH|1QUARTER";
+_SECTION_BEGIN("R1-S1 Breakout with EMA trend filters");
 
-// Get afl timeframe from timeframe string
-function G_TimeFrame(t_frame)
-{
-    tFrame = 0;
-    if (t_frame == "1MINUTE"){
-        tFrame = in1Minute;
-    }else if(t_frame == "5MINUTES"){
-        tFrame = 5*in1Minute;
-    }else if(t_frame == "10MINUTES"){
-        tFrame = 10*in1Minute;
-    }else if(t_frame == "15MINUTES"){
-        tFrame = in15Minute;
-    }else if(t_frame == "30MINUTES"){
-        tFrame = 2*in15Minute;
-    }else if(t_frame == "1HOUR"){
-        tFrame = inHourly;
-    }else if(t_frame == "2HOURS"){
-        tFrame = 2*inHourly;
-    }else if(t_frame == "4HOURS"){
-        tFrame = 4*inHourly;
-    }else if(t_frame == "5HOURS"){
-        tFrame = 5*inHourly;
-    }else if (t_frame == "1DAY"){
-        tFrame = inDaily;
-    }else if (t_frame == "2DAY"){
-        tFrame = 2*inDaily;
-    }else if (t_frame == "4DAILY"){
-        tFrame = 4*inDaily;
-    }else if (t_frame == "WEEKLY"){
-        tFrame = inWeekly;
-    }else if (t_frame == "2*WEEKLY"){
-        tFrame = 2*inWeekly;
-    }else if (t_frame == "MONTHLY"){
-        tFrame = inMonthly;
-    }else if (t_frame == "2*MONTHLY"){
-        tFrame = 2*inMonthly;
-    }else if (t_frame == "QUARTERLY"){
-        tFrame = inQuarterly;
-    }else if (t_frame == "" OR t_frame == "DEFAULT"){
-        tFrame = Interval(0);
-    }else{
-        Error("Wrong time frame " + t_frame);
-    }
-    return tFrame;
-}
-
-// Get CPR Pivots
-function G_Pivots(t_frame)
-{
-    // Get Time frame in numerical format
-    tt_frame = G_TimeFrame(t_frame);
-    
-    PDH = TimeFrameGetPrice("H", tt_frame, -1);    
-    PDL = TimeFrameGetPrice("L", tt_frame, -1);
-    PDC = TimeFrameGetPrice("C", tt_frame, -1);
-    PDO = TimeFrameGetPrice("O", tt_frame, -1);
-    
-    PI_Level = (PDH + PDL + PDC)/3;
-    BC_Level = (PDH + PDL)/2;
-    TC_Level = (PI_Level - BC_Level) + PI_Level;
-    R1_Level = PI_Level * 2 - PDL;
-    S1_Level = PI_Level * 2 - PDH;
-    R2_Level = (PI_Level - S1_Level) + R1_Level;
-    S2_Level = PI_Level - (R1_Level - S1_Level);
- 
-    VarSet("PH", PDH);
-    VarSet("PL", PDL);   
-    VarSet("PI", PI_Level);
-    VarSet("BC", BC_Level);
-    VarSet("TC", TC_Level);
-    VarSet("R1", R1_Level);
-    VarSet("S1", S1_Level);
-    VarSet("R2", R2_Level);
-    VarSet("S2", S2_Level);
-}
-
-// Get MTF EMA
-function G_EMA(series, period, t_frame, shift)
-{
-    tt_frame = G_TimeFrame(t_frame);
-    series_new = TimeFrameCompress(series, tt_frame);
-    
-    EMA_sig = Ref(EMA(series_new, period), shift);
-    
-    return TimeFrameExpand(EMA_sig, tt_frame);
-}
+RUN_MODE = "BackTest";
 
 SetOption("CommissionMode", 1); //  percent 
 SetOption("CommissionAmount", 0.12); //
 
-// Parameters
-t_frame_pivots = ParamList("Pivot Time Frame", TIME_FRAMES);
-t_frame_ema    = ParamList("EMA Time Frame", TIME_FRAMES);
-Cross_thr      = Optimize("Threshold", 20, 0, 50, 5);
-EMA_len1       = Optimize("EMA Length", 50, 1, 200, 25);
+if (RUN_MODE == "Optimize"){
+    // Parameters
+    t_frame_pivots_index = Optimize("Pivot Time Frame index", 0, 0, G_NumTimeFrames()-1, 1);
+    t_frame_ema_index    = Optimize("EMA Time Frame index", 0, 0, G_NumTimeFrames()-1, 1);
+    rs_type_index        = Optimize("RS Type index", 0, 0, G_NumRSLevels()-1, 1);
+    Cross_thr            = Optimize("Threshold", 20, 0, 50, 5);
+    EMA_len1             = Optimize("EMA Length", 20, 1, 200, 25);
+    
+    t_frame_pivots       = G_TimeFrameFromIndex(t_frame_pivots_index);
+    t_frame_ema          = G_TimeFrameFromIndex(t_frame_ema_index);
+    rs_type              = G_RSLevelsFromIndex(rs_type_index);
+}else{
+    // Parameters
+    t_frame_pivots = ParamList("Pivot Time Frame", TIME_FRAMES);
+    t_frame_ema    = ParamList("EMA Time Frame", TIME_FRAMES);
+    rs_type        = ParamList("RS Type", RS_LEVELS);
+    Cross_thr      = Param("Threshold", 20, 0, 50, 5);
+    EMA_len1       = Param("EMA Length", 20, 1, 200, 25);
+}
 
 // Indicators
-G_Pivots(t_frame_pivots);
-R1 = VarGet("R1");
-S1 = VarGet("S1");
+G_PivotsRS(t_frame_pivots, rs_type);
+R_Level = VarGet("R");
+S_Level = VarGet("S");
 
-EMA_sig1 = G_EMA(C, EMA_len1, t_frame_ema, -1);
-EMA_sig2 = G_EMA(C, 2*EMA_len1, t_frame_ema, -1);
-EMA_sig3 = G_EMA(C, 4*EMA_len1, t_frame_ema, -1);
+EMA_sig1 = G_EMA(EMA_len1, t_frame_ema, -1);
+EMA_sig2 = G_EMA(2*EMA_len1, t_frame_ema, -1);
+EMA_sig3 = G_EMA(4*EMA_len1, t_frame_ema, -1);
 
 Buy   = Cross(Close, R1 + Cross_thr) AND (EMA_sig1 >= EMA_sig2) AND (EMA_sig2 >= EMA_sig3); 
 Short = Cross(S1 - Cross_thr, Close) AND (EMA_sig1 <= EMA_sig2) AND (EMA_sig2 <= EMA_sig3);
 Sell  = Short;
 Cover = Buy;
+
+Buy   = ExRem(Buy, Sell);
+Sell  = ExRem(Sell, Buy);
+Short = ExRem(Short, Cover);
+Cover = ExRem(Cover, Short);
 
 // Plots
 Plot(R1, "R1", colorBrightGreen, styleLine);
@@ -118,3 +52,5 @@ Plot(S1, "S1", colorBrown, styleLine);
 Plot(EMA_sig1, "EMA1", colorBlue, styleLine);
 Plot(EMA_sig2, "EMA2", colorBrown, styleLine);
 Plot(EMA_sig3, "EMA3", colorCustom10, styleLine);
+
+_SECTION_END();
