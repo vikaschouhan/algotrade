@@ -1,0 +1,85 @@
+_SECTION_BEGIN("Multi TF Pivot indicator");
+
+//////////////////////////////////////////////////
+// Get Pivot points based on generic High and Low Levels
+function GetPV(nbar_t, H_level, L_Level)
+{
+    PHigh            = H_Level > Ref(HHV(H_Level, nbar_t), -1) AND Ref(HHV(H_Level, nbar_t), nbar_t) <= H_Level;
+    PLow             = L_Level < Ref(LLV(L_Level, nbar_t), -1) AND Ref(LLV(L_Level, nbar_t), nbar_t) >= L_Level;
+    VarSet("PHigh", PHigh);
+    VarSet("PLow", PLow);
+}
+
+/////////////////////////////////////////////////
+// Get Pivots based on High Low
+function GetPVHL(nbar_t)
+{
+    GetPV(nbar_t, H, L);
+}
+
+/////////////////////////////////////////////////
+// Main logic starts here
+nbar_t               = Param("nbar", 1, 1, 20, 1);
+t_frame              = ParamList("time_frame", "DAILY|2*DAILY|4*DAILY|WEEKLY|2*WEEKLY", 0);
+show_all_plots       = ParamToggle("show_all_plots", "No|Yes", 0);
+
+tFrame               = 0;
+if (t_frame == "DAILY"){
+    tFrame           = inDaily;
+}else if (t_frame == "2*DAILY"){
+    tFrame           = 2*inDaily;
+}else if (t_frame == "4*DAILY"){
+    tFrame           = 4*inDaily;
+}else if (t_frame == "WEEKLY"){
+    tFrame           = inWeekly;
+}else if (t_frame == "2*WEEKLY"){
+    tFrame           = 2*inWeekly;
+}
+
+// Set custom Time Frame
+TimeFrameSet(tFrame);
+
+// Define conditions
+GetPVHL(nbar_t);
+PHigh            = VarGet("PHigh");
+PLow             = VarGet("PLow");
+
+// High Fractals (Take last 4)
+PHighPrice1t     = ValueWhen(PHigh, H, 1);
+PHighPrice2t     = ValueWhen(PHigh, H, 2);
+PHighPrice3t     = ValueWhen(PHigh, H, 3);
+PHighPrice4t     = ValueWhen(PHigh, H, 4);
+
+// Low Fractals (Take last 4)
+PLowPrice1t      = ValueWhen(PLow, L, 1);
+PLowPrice2t      = ValueWhen(PLow, L, 2);
+PLowPrice3t      = ValueWhen(PLow, L, 3);
+PLowPrice4t      = ValueWhen(PLow, L, 4);
+
+// Restore Time Frame
+TimeFrameRestore();
+
+PHighPrice1      = TimeFrameExpand(PHighPrice1t, tFrame);
+PHighPrice2      = TimeFrameExpand(PHighPrice2t, tFrame);
+PHighPrice3      = TimeFrameExpand(PHighPrice3t, tFrame);
+PHighPrice4      = TimeFrameExpand(PHighPrice4t, tFrame);
+    
+PLowPrice1       = TimeFrameExpand(PLowPrice1t, tFrame);
+PLowPrice2       = TimeFrameExpand(PLowPrice2t, tFrame);
+PLowPrice3       = TimeFrameExpand(PLowPrice3t, tFrame);
+PLowPrice4       = TimeFrameExpand(PLowPrice4t, tFrame);
+
+// Plots
+if (show_all_plots)
+{
+    Plot(PHighPrice1, "PH1", colorBlue);
+    Plot(PHighPrice2, "PH2", colorPink);
+    Plot(PHighPrice3, "PH3", colorBlueGrey);
+    Plot(PHighPrice4, "PH4", colorBrown);
+}
+Plot(PLowPrice1,  "PL1", colorGreen);
+Plot(PLowPrice2,  "PL2", colorRed);
+Plot(PLowPrice3,  "PL3", colorDarkYellow);
+Plot(PLowPrice4,  "PL4", colorAqua);
+
+_SECTION_END();
