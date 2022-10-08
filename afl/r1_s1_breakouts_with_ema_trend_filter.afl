@@ -2,32 +2,50 @@
 
 _SECTION_BEGIN("R1-S1 Breakout with EMA trend filters");
 
-RUN_MODE = "BackTest";
-
+////////////////////////////////////////////////////////
+// Backtester control parameters
+////////////////////////////////////////////////////////
 SetOption("CommissionMode", 1); //  percent 
 SetOption("CommissionAmount", 0.12); //
 
-if (RUN_MODE == "Optimize"){
-    // Parameters
-    t_frame_pivots_index = Optimize("Pivot Time Frame index", 0, 0, G_NumTimeFrames()-1, 1);
-    t_frame_ema_index    = Optimize("EMA Time Frame index", 0, 0, G_NumTimeFrames()-1, 1);
-    rs_type_index        = Optimize("RS Type index", 0, 0, G_NumRSLevels()-1, 1);
-    Cross_thr            = Optimize("Threshold", 20, 0, 50, 5);
-    EMA_len1             = Optimize("EMA Length", 20, 1, 200, 25);
-    
+/////////////////////////////////////////////////////////
+// Parameters
+/////////////////////////////////////////////////////////
+// Master parameter controlling if script is to be run in
+// optimizer mode or backtest mode. Appropriate parameters
+// are seected based on this master mode.
+Optimizer_run = ParamToggle("Optimize", "No|Yes", 0);
+
+// Parameters
+_SECTION_BEGIN("Optimizer parameters");
+t_frame_pivots_index = Optimize("Pivot Time Frame index", 0, 0, G_NumTimeFrames()-1, 1);
+t_frame_ema_index    = Optimize("EMA Time Frame index", 0, 0, G_NumTimeFrames()-1, 1);
+rs_type_index        = Optimize("RS Type index", 0, 0, G_NumRSLevels()-1, 1);
+Cross_thr_opt        = Optimize("Threshold", 20, 0, 50, 5);
+EMA_len1_opt         = Optimize("EMA Length", 20, 1, 200, 25);
+_SECTION_END();
+
+_SECTION_BEGIN("Backtest parameters");
+// Parameters
+t_frame_pivots = ParamList("Pivot Time Frame", TIME_FRAMES);
+t_frame_ema    = ParamList("EMA Time Frame", TIME_FRAMES);
+rs_type        = ParamList("RS Type", RS_LEVELS);
+Cross_thr      = Param("Threshold", 20, 0, 50, 5);
+EMA_len1       = Param("EMA Length", 20, 1, 200, 25);
+_SECTION_END();
+
+// Some parameters need to be calculated for optimizer mode run
+if (Optimizer_run){
     t_frame_pivots       = G_TimeFrameFromIndex(t_frame_pivots_index);
     t_frame_ema          = G_TimeFrameFromIndex(t_frame_ema_index);
     rs_type              = G_RSLevelsFromIndex(rs_type_index);
-}else{
-    // Parameters
-    t_frame_pivots = ParamList("Pivot Time Frame", TIME_FRAMES);
-    t_frame_ema    = ParamList("EMA Time Frame", TIME_FRAMES);
-    rs_type        = ParamList("RS Type", RS_LEVELS);
-    Cross_thr      = Param("Threshold", 20, 0, 50, 5);
-    EMA_len1       = Param("EMA Length", 20, 1, 200, 25);
+    Cross_thr            = Cross_thr_opt;
+    EMA_len1             = EMA_len1_opt;
 }
 
+///////////////////////////////////////////////////////////
 // Indicators
+///////////////////////////////////////////////////////////
 G_PivotsRS(t_frame_pivots, rs_type);
 R_Level = VarGet("R");
 S_Level = VarGet("S");
@@ -36,7 +54,10 @@ EMA_sig1 = G_EMA(EMA_len1, t_frame_ema, -1);
 EMA_sig2 = G_EMA(2*EMA_len1, t_frame_ema, -1);
 EMA_sig3 = G_EMA(4*EMA_len1, t_frame_ema, -1);
 
-Buy   = Cross(Close, R1 + Cross_thr) AND (EMA_sig1 >= EMA_sig2) AND (EMA_sig2 >= EMA_sig3); 
+///////////////////////////////////////////////////////////
+// Trade signals
+///////////////////////////////////////////////////////////
+Buy   = Cross(Close, R1 + Cross_thr) AND (EMA_sig1 >= EMA_sig2) AND (EMA_sig2 >= EMA_sig3);
 Short = Cross(S1 - Cross_thr, Close) AND (EMA_sig1 <= EMA_sig2) AND (EMA_sig2 <= EMA_sig3);
 Sell  = Short;
 Cover = Buy;
@@ -46,7 +67,9 @@ Sell  = ExRem(Sell, Buy);
 Short = ExRem(Short, Cover);
 Cover = ExRem(Cover, Short);
 
+///////////////////////////////////////////////////////////
 // Plots
+///////////////////////////////////////////////////////////
 Plot(R1, "R1", colorBrightGreen, styleLine);
 Plot(S1, "S1", colorBrown, styleLine);
 Plot(EMA_sig1, "EMA1", colorBlue, styleLine);
