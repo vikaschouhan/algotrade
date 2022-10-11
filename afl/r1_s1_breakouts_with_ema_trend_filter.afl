@@ -5,8 +5,10 @@ _SECTION_BEGIN("R1-S1 Breakout with EMA trend filters");
 ////////////////////////////////////////////////////////
 // Backtester control parameters
 ////////////////////////////////////////////////////////
-SetOption("CommissionMode", 1); //  percent 
-SetOption("CommissionAmount", 0.12); //
+SetOption("CommissionMode", 3);
+SetOption("CommissionAmount", 15);
+OptimizerSetEngine("cmae");
+OptimizerSetOption("MaxEval", 5000);
 
 /////////////////////////////////////////////////////////
 // Parameters
@@ -67,13 +69,24 @@ Sell  = ExRem(Sell, Buy);
 Short = ExRem(Short, Cover);
 Cover = ExRem(Cover, Short);
 
+BuyPrice   = Open;
+SellPrice  = Open;
+ShortPrice = Open;
+CoverPrice = Open;
+
 ///////////////////////////////////////////////////////////
 // Plots
 ///////////////////////////////////////////////////////////
+// Indicator plots
+Plot(Close, "Price", colorBlack, styleCandle);
 Plot(R1, "R1", colorBrightGreen, styleLine);
 Plot(S1, "S1", colorBrown, styleLine);
 Plot(EMA_sig1, "EMA1", colorBlue, styleLine);
 Plot(EMA_sig2, "EMA2", colorBrown, styleLine);
 Plot(EMA_sig3, "EMA3", colorCustom10, styleLine);
+
+// Plot trades
+shape = Buy * shapeUpArrow + Sell * shapeDownArrow;
+PlotShapes(shape, IIf(Buy, colorGreen, colorRed), 0, IIf(Buy, Low, High));
 
 _SECTION_END();
