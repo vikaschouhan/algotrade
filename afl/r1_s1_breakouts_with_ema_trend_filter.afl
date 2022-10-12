@@ -52,9 +52,9 @@ G_PivotsRS(t_frame_pivots, rs_type);
 R_Level = VarGet("R");
 S_Level = VarGet("S");
 
-EMA_sig1 = G_EMA(EMA_len1, t_frame_ema, -1);
-EMA_sig2 = G_EMA(2*EMA_len1, t_frame_ema, -1);
-EMA_sig3 = G_EMA(4*EMA_len1, t_frame_ema, -1);
+EMA_sig1 = G_Function2("EMA", t_frame_ema, -1, "Close", EMA_len1);
+EMA_sig2 = G_Function2("EMA", t_frame_ema, -1, "Close", 2*EMA_len1);
+EMA_sig3 = G_Function2("EMA", t_frame_ema, -1, "Close", 4*EMA_len1);
 
 ///////////////////////////////////////////////////////////
 // Trade signals

@@ -3,6 +3,10 @@ _SECTION_BEGIN("Standard Library functions");
 TIME_FRAMES = "DEFAULT|1MINUTE|5MINUTES|10MINUTES|15MINUTES|30MINUTES|1HOUR|2HOURS|4HOURS|5HOURS|1DAY|2DAYS|4DAYS|1WEEK|2WEEKS|1MONTH|1QUARTER";
 RS_LEVELS   = "R1_S1|R2_S2|H_L";
 
+//////////////////////////////////////////////////////////////////////////////
+// Timeframe functions
+//////////////////////////////////////////////////////////////////////////////
+
 // Get afl timeframe from timeframe string
 function G_TimeFrame(t_frame)
 {
@@ -48,6 +52,21 @@ function G_TimeFrame(t_frame)
     }
     return tFrame;
 }
+
+function G_TimeFrameFromIndex(index)
+{
+    str_tf = StrExtract(TIME_FRAMES, index, separator='|');
+    return str_tf;
+}
+
+function G_NumTimeFrames()
+{
+    return 1 + StrCount(TIME_FRAMES, "|");
+}
+
+//////////////////////////////////////////////////////////////////////
+// CPR Pivot functions
+//////////////////////////////////////////////////////////////////////
 
 // Get CPR Pivots
 function G_Pivots(t_frame)
@@ -96,17 +115,6 @@ function G_PivotsRS(t_frame, rs_type)
     }
 }
 
-function G_TimeFrameFromIndex(index)
-{
-    str_tf = StrExtract(TIME_FRAMES, index, separator='|');
-    return str_tf;
-}
-
-function G_NumTimeFrames()
-{
-    return 1 + StrCount(TIME_FRAMES, "|");
-}
-
 function G_RSLevelsFromIndex(index)
 {
     str_level = StrExtract(RS_Levels, index, separator='|');
@@ -118,23 +126,80 @@ function G_NumRSLevels()
     return 1 + StrCount(RS_LEVELS, "|");
 }
 
-// MTF EMA
-function G_EMA(period, t_frame, shift)
+/////////////////////////////////////////////////////////////////////
+// Generic indicator functions for multiple time frames
+/////////////////////////////////////////////////////////////////////
+function StrToSeries(s_str)
 {
-    tt_frame = G_TimeFrame(t_frame);
-    TimeFrameSet(tt_frame);
-    EMA_v = Ref(EMA(C, period), shift);
-    TimeFrameRestore();
-    return TimeFrameExpand(EMA_v, tt_frame);
+    series = 0;
+    series_str = StrToLower(s_str);
+
+    if (series_str == "close"){
+        series = Close;
+    }else if (series_str == "open"){
+        series = Open;
+    }else if (series_str == "high"){
+        series = High;
+    }else if (series_str == "low"){
+        series = Low;
+    }else{
+        Error("Unknown String passed " + s_str);
+    }
+    return series;
 }
 
-function G_ADX(period, t_frame, shift)
+function _G_Function(func_name, Param_1, Param_2, Param_3, Param_4, Param_5)
+{
+    func_name = StrToLower(func_name);
+    output = 0;
+    if (func_name == "ema"){
+        output = EMA(StrToSeries(Param_1), Param_2);
+    }else if (func_name == "sma"){
+        output = MA(StrToSeries(Param_1), Param_2);
+    }else if (func_name == "adx"){
+        output = ADX(Param_1);
+    }else if (func_name == "hhv"){
+        output = HHV(StrToSeries(Param_1), Param_2);
+    }else if (func_name == "llv"){
+        output = LLV(StrToSeries(Param_1), Param_2);
+    }else {
+        Error("Function name " + func_name + " not defined !!");
+    }
+    return output;
+}
+
+function _G_FunctionTF(func_name, t_frame, shift, Param_1, Param_2, Param_3, Param_4, Param_5)
 {
     tt_frame = G_TimeFrame(t_frame);
     TimeFrameSet(tt_frame);
-    ADX_v = Ref(ADX(period), shift);
+    ind_tf = Ref(_G_Function(func_name, Param_1, Param_2, Param_3, Param_4, Param_5), shift);
     TimeFrameRestore();
-    return TimeFrameExpand(ADX_v, tt_frame);
+    return TimeFrameExpand(ind_tf, tt_frame);
+}
+
+function G_Function1(func_name, t_frame, shift, Param_1)
+{
+    return _G_FunctionTF(func_name, t_frame, shift, Param_1, 0, 0, 0, 0);
+}
+
+function G_Function2(func_name, t_frame, shift, Param_1, Param_2)
+{
+    return _G_FunctionTF(func_name, t_frame, shift, Param_1, Param_2, 0, 0, 0);
+}
+
+function G_Function3(func_name, t_frame, shift, Param_1, Param_2, Param_3)
+{
+    return _G_FunctionTF(func_name, t_frame, shift, Param_1, Param_2, Param_3, 0, 0);
+}
+
+function G_Function4(func_name, t_frame, shift, Param_1, Param_2, Param_3, Param_4)
+{
+    return _G_FunctionTF(func_name, t_frame, shift, Param_1, Param_2, Param_3, Param_4, 0);
+}
+
+function G_Function5(func_name, t_frame, shift, Param_1, Param_2, Param_3, Param_4, Param_5)
+{
+    return _G_FunctionTF(func_name, t_frame, shift, Param_1, Param_2, Param_3, Param_4, Param_5);
 }
 
 _SECTION_END();
