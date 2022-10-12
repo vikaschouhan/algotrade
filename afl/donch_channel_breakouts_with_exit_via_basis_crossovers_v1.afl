@@ -1,0 +1,78 @@
+#include <stdlib.afl>
+
+_SECTION_BEGIN("Donchian Channel Breakouts v1");
+
+////////////////////////////////////////////////////////
+// Backtester control parameters
+////////////////////////////////////////////////////////
+SetOption("CommissionMode", 3);
+SetOption("CommissionAmount", 15);
+OptimizerSetEngine("trib");
+OptimizerSetOption("MaxEval", 5000);
+
+/////////////////////////////////////////////////////////
+// Parameters
+/////////////////////////////////////////////////////////
+// Master parameter controlling if script is to be run in
+// optimizer mode or backtest mode. Appropriate parameters
+// are seected based on this master mode.
+Optimizer_run = ParamToggle("Optimize", "No|Yes", 0);
+
+// Parameters
+_SECTION_BEGIN("Optimizer parameters");
+t_frame_donch_index = Optimize("Donchian Time Frame index", 0, 0, G_NumTimeFrames()-1, 1);
+donch_period_opt    = Optimize("Donchian Period", 5, 5, 200, 5);
+_SECTION_END();
+
+_SECTION_BEGIN("Backtest parameters");
+// Parameters
+t_frame_donch  = ParamList("Donchian Time Frame", TIME_FRAMES);
+donch_period   = Param("Donchian Period", 5, 5, 200, 5);
+_SECTION_END();
+
+// Some parameters need to be calculated for optimizer mode run
+if (Optimizer_run){
+    t_frame_donch   = G_TimeFrameFromIndex(t_frame_donch_index);
+    donch_period    = donch_period_opt;
+}
+
+///////////////////////////////////////////////////////////
+// Indicators
+///////////////////////////////////////////////////////////
+
+donch_hi  = G_Function2("HHV", t_frame_donch, -1, "High", donch_period);
+donch_lo  = G_Function2("LLV", t_frame_donch, -1, "Low", donch_period);
+donch_bas = (donch_hi + donch_lo)/2;
+
+///////////////////////////////////////////////////////////
+// Trade signals
+///////////////////////////////////////////////////////////
+Buy   = Cross(Close, donch_hi);
+Short = Cross(donch_lo, Close);
+Sell  = Cross(donch_bas, Close);
+Cover = Cross(Close, donch_bas);
+
+Buy   = ExRem(Buy, Sell);
+Sell  = ExRem(Sell, Buy);
+Short = ExRem(Short, Cover);
+Cover = ExRem(Cover, Short);
+
+BuyPrice   = Open;
+SellPrice  = Open;
+ShortPrice = Open;
+CoverPrice = Open;
+
+///////////////////////////////////////////////////////////
+// Plots
+///////////////////////////////////////////////////////////
+// Indicator plots
+Plot(Close, "Price", colorBlack, styleCandle);
+Plot(donch_hi, "DHi", colorBrightGreen, styleLine);
+Plot(donch_lo, "DLo", colorBrown, styleLine);
+Plot(donch_bas, "DMid", colorBlue, styleLine);
+
+// Plot trades
+shape = Buy * shapeUpArrow + Sell * shapeDownArrow;
+PlotShapes(shape, IIf(Buy, colorGreen, colorRed), 0, IIf(Buy, Low, High));
+
+_SECTION_END();
