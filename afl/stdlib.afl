@@ -64,6 +64,79 @@ function G_NumTimeFrames()
     return 1 + StrCount(TIME_FRAMES, "|");
 }
 
+/////////////////////////////////////////////////////////////////////
+// Custom backtest parameters
+////////////////////////////////////////////////////////////////////
+// For adding some custom metrics to backtest/optimzation report
+function A_CustomMetrics()
+{
+    SetCustomBacktestProc("");
+
+    if(Status("action") == actionPortfolio)
+    {
+        bo = GetBacktesterObject();
+        bo.Backtest();
+
+        st = bo.GetPerformanceStats(0);
+        dt = DateTime();
+        TestStartDate = DateTimeConvert(2, Status("rangefromdate"));
+        TestEndDate = LastValue(dt);
+        YearsInTest = DateTimeDiff(TestEndDate, TestStartDate) / 31557600;
+        NumTrades = st.getvalue("AllQty");
+        TradesPerYear = NumTrades / YearsInTest;
+        Adj_K_ratio = st.GetValue("Kratio")*sqrt(TradesPerYear);
+
+        // Here we add custom metric to backtest report
+        bo.AddCustomMetric( "Years in Test", YearsInTest, Null, Null, 1);
+        bo.AddCustomMetric( "Trades Per Annum", TradesPerYear, Null, Null, 0);
+        bo.AddCustomMetric( "K ratio", Adj_K_ratio, Null, Null, 3);
+    }
+}
+
+// Read and set commissions
+function A_Commissions()
+{
+    _SECTION_BEGIN("Commissions");
+    commission_mode  = Param("Commission Mode", 3, 0, 3, 1);
+    commission_value = Param("Commission Value", 15, 0, 1000, 15);
+    commission_value_perct = Param("Commission Value (percentage)", 0.01, 0.0, 1.0, 0.01);
+
+    SetOption("CommissionMode", commission_mode);
+    SetOption("CommissionAmount", IIf(commission_mode == 1, commission_value_perct, commission_value));
+    _SECTION_END();
+}
+
+// Read and set optimizer hyperparameters
+function A_OptimizerParams()
+{
+    _SECTION_BEGIN("Optimizer Hyper Params");
+    opt_type = ParamList("Optimizer type", "DEFAULT|CMAE|TRIB|SPSO");
+    Max_eval = Param("Max Eval Steps", 1000, 1000, 5000, 1000);
+
+    optimizer_t = "";
+    if (opt_type == "CMAE"){
+        optimizer_t = "cmae";
+    }else if (opt_type == "TRIB"){
+        optimizer_t = "trib";
+    }else if (opt_type == "SPSO"){
+        optimizer_t = "spso";
+    }
+
+    if (optimizer_t != ""){
+        OptimizerSetEngine(optimizer_t);
+        OptimizerSetOption("MaxEval", Max_eval);
+    }
+    _SECTION_END();
+}
+
+// Combines all above functions in a single function
+function A_ControlParams()
+{
+    A_OptimizerParams();
+    A_Commissions();
+    A_CustomMetrics();
+}
+
 //////////////////////////////////////////////////////////////////////
 // CPR Pivot functions
 //////////////////////////////////////////////////////////////////////
@@ -152,17 +225,15 @@ function _G_Function(func_name, Param_1, Param_2, Param_3, Param_4, Param_5)
 {
     func_name = StrToLower(func_name);
     output = 0;
-    if (func_name == "ema"){
-        output = EMA(StrToSeries(Param_1), Param_2);
-    }else if (func_name == "sma"){
-        output = MA(StrToSeries(Param_1), Param_2);
-    }else if (func_name == "adx"){
-        output = ADX(Param_1);
-    }else if (func_name == "hhv"){
-        output = HHV(StrToSeries(Param_1), Param_2);
-    }else if (func_name == "llv"){
-        output = LLV(StrToSeries(Param_1), Param_2);
-    }else {
+    if      (func_name == "ema")         { output = EMA(StrToSeries(Param_1), Param_2); }
+    else if (func_name == "sma")         { output = MA(StrToSeries(Param_1), Param_2);  }
+    else if (func_name == "adx")         { output = ADX(Param_1);                       }
+    else if (func_name == "hhv")         { output = HHV(StrToSeries(Param_1), Param_2); }
+    else if (func_name == "llv")         { output = LLV(StrToSeries(Param_1), Param_2); }
+    else if (func_name == "atr")         { output = ATR(Param_1);                       }
+    else if (func_name == "hhv_ema")     { output = HHV(EMA(StrToSeries(Param_1), Param_2), Param_3); }
+    else if (func_name == "llv_ema")     { output = LLV(EMA(StrToSeries(Param_1), Param_2), Param_3); }
+    else {
         Error("Function name " + func_name + " not defined !!");
     }
     return output;

@@ -5,10 +5,7 @@ _SECTION_BEGIN("R1-S1 Breakout");
 ////////////////////////////////////////////////////////
 // Backtester control parameters
 ////////////////////////////////////////////////////////
-OptimizerSetEngine("cmae");
-OptimizerSetOption("MaxEval", 5000);
-SetOption("CommissionMode", 3);
-SetOption("CommissionAmount", 15);
+A_ControlParams();
 
 /////////////////////////////////////////////////////////
 // Parameters

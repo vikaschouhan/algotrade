@@ -5,10 +5,7 @@ _SECTION_BEGIN("R1-S1 Breakout with EMA trend filters");
 ////////////////////////////////////////////////////////
 // Backtester control parameters
 ////////////////////////////////////////////////////////
-SetOption("CommissionMode", 3);
-SetOption("CommissionAmount", 15);
-OptimizerSetEngine("cmae");
-OptimizerSetOption("MaxEval", 5000);
+A_ControlParams();
 
 /////////////////////////////////////////////////////////
 // Parameters

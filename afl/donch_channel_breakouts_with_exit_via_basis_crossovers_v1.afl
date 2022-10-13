@@ -5,10 +5,7 @@ _SECTION_BEGIN("Donchian Channel Breakouts v1");
 ////////////////////////////////////////////////////////
 // Backtester control parameters
 ////////////////////////////////////////////////////////
-SetOption("CommissionMode", 3);
-SetOption("CommissionAmount", 15);
-OptimizerSetEngine("trib");
-OptimizerSetOption("MaxEval", 5000);
+A_ControlParams();
 
 /////////////////////////////////////////////////////////
 // Parameters
