@@ -72,9 +72,9 @@ ROC(roc_s, roc_l) =>
 
 /////////////////////////////////////////////////////////////////////
 // Get signals
-mmi_sig = request.security(syminfo.tickerid, mmi_timeframe, Laguerre_v1(mmi_filt_gamma, MMI(open, close, mmi_inputLength)))
-roc_sig = request.security(syminfo.tickerid, roc_timeframe, ROC(roc_source, roc_length))
-roc_roc_sig = request.security(syminfo.tickerid, roc_timeframe, ROC(ta.roc(roc_source, roc_length), roc_length))
+mmi_sig = request.security(syminfo.tickerid, mmi_timeframe, Laguerre_v1(mmi_filt_gamma, MMI(open, close, mmi_inputLength))[1])
+roc_sig = request.security(syminfo.tickerid, roc_timeframe, ROC(roc_source, roc_length)[1])
+roc_roc_sig = request.security(syminfo.tickerid, roc_timeframe, ROC(ta.roc(roc_source, roc_length), roc_length)[1])
 
 buy_sig = (roc_sig > roc_thresh) and (roc_roc_sig > roc_thresh) and (mmi_sig < mmi_thresh)
 sell_sig = (roc_sig < roc_thresh) or (roc_roc_sig < roc_thresh)
