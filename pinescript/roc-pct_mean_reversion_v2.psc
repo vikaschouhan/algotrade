@@ -5,7 +5,7 @@ strategy(title="ROC-pct mean rev v2", overlay=false, default_qty_type=strategy.p
 // Inputs
 time_frame     = input(defval='', title='Timeframe', type=input.resolution)
 rocpct_period  = input(defval=8, title='ROC-pct period', type=input.integer)
-ema_len        = input(defval=100, title='Trend EMA')
+t_len          = input(defval=100, title='Trend Period')
 en_long        = input(defval=true, title='Enable Long', type=input.bool)
 en_short       = input(defval=false, title='Enable Short', type=input.bool)
 en_tfilt       = input(defval=false, title='Enable Trend Filter', type=input.bool)
@@ -13,6 +13,7 @@ short_ethr     = input(defval=2, title='Short Exit Threshold for ROC-pct', type=
 pct_fn         = input(defval='rescale', title='Percentile Function', options=['rescale', 'percentrank', 'rescale_dvn'])
 trd_logic      = input(defval='trend', title='Trade Logic', options=['trend', 'mean_rev'])
 mrev_thr       = input(defval=10, title='Mean Reversion Threshold')
+tr_type        = input(defval='ema', title='Trend Type', options=['ema', 'roc-ema'])
 
 ////////////////////////////////////////
 // Utility functions
@@ -30,6 +31,16 @@ rescale_dvn_fn(rocpct_p) =>
     (dv_n - lowest(dv_n, rocpct_p))/(highest(dv_n, rocpct_p) - lowest(dv_n, rocpct_p)) * 100
 //
 
+trend_up_ema(p_) =>
+    close > ema(close, p_)
+//
+
+trend_up_roc_ema(p_) =>
+    roc = roc(ema(close, p_), p_)
+    roc_ema = ema(roc, p_)
+    (roc > roc_ema)
+//
+
 ///////////////////////////////////////
 // Calculate signals
 roc_pct_rescale     = security(syminfo.tickerid, time_frame, rescale_fn(close, rocpct_period))
@@ -44,9 +55,14 @@ if pct_fn == 'rescale_dvn'
     roc_pct_sig := roc_pct_rescale_dvn
 //
 
-ema_sig       = ema(close, ema_len)
-trend_up      = en_tfilt ? (close > ema_sig) : true
-trend_dn      = en_tfilt ? (close < ema_sig) : true
+// Trend Filter signals
+trend_up_t = trend_up_ema(t_len)
+if tr_type == 'roc-ema'
+    trend_up_t := trend_up_roc_ema(t_len)
+//
+
+trend_up    = en_tfilt ? (trend_up_t == true) : true
+trend_dn    = en_tfilt ? (trend_up_t == false) : true
 
 ///////////////////////////////////////
 // Execute positions
